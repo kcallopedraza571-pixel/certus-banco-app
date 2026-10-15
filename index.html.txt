@@ -1,0 +1,1117 @@
+<title>Prototipo Certus Banco</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0A2A55">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Certus Banco">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<style>
+[hidden]{display:none!important}
+/* Concepto: marco de celular al centro; a un lado, las etapas del recorrido de Rosa (buyer persona).
+   Color: degradados azules (indigo, azul, cian, violeta, azul petroleo, marino) con turquesa para lo positivo. */
+:root{
+  --bg:#EEF4FF; --panel:#FFFFFF; --surface:#FFFFFF; --soft:#EDF2FD; --line:#DCE4F5;
+  --ink:#14203F; --muted:#56628A; --head:#0B2A5B; --primary:#2347C8; --accent:#2F6BFF;
+  --brand:#2F6BFF; --on-brand:#FFFFFF; --ok:#0E9F8E; --warn:#D9480F; --frame:#0E1633;
+  --grad:linear-gradient(160deg,#3A7BFF 0%,#2347C8 52%,#0A2A55 100%);
+  --btn:linear-gradient(135deg,#2F6BFF 0%,#5B4BFF 100%);
+  --s1:#4B55C8; --s2:#2F6BFF; --s3:#0A8FC4; --s4:#0B7F86; --s5:#6A4CFF;
+  --shadow:0 12px 40px rgba(20,50,140,.22);
+  --serif:"Fraunces",Georgia,"Times New Roman",serif; --sans:"Figtree",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0A1022; --panel:#111A33; --surface:#131D3A; --soft:#1A2750; --line:#26356A;
+  --ink:#E8EEFF; --muted:#9FB0DC; --head:#B5CBFF; --primary:#5B84FF; --accent:#5B93FF;
+  --brand:#5B93FF; --ok:#2DD4BF; --warn:#FF8A5C; --frame:#04070F;
+  --s1:#8089F0; --s2:#5B93FF; --s3:#2CB4EA; --s4:#27B7BC; --s5:#9A85FF;
+  --shadow:0 12px 40px rgba(0,0,0,.55); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0A1022; --panel:#111A33; --surface:#131D3A; --soft:#1A2750; --line:#26356A;
+  --ink:#E8EEFF; --muted:#9FB0DC; --head:#B5CBFF; --primary:#5B84FF; --accent:#5B93FF;
+  --brand:#5B93FF; --ok:#2DD4BF; --warn:#FF8A5C; --frame:#04070F;
+  --s1:#8089F0; --s2:#5B93FF; --s3:#2CB4EA; --s4:#27B7BC; --s5:#9A85FF;
+  --shadow:0 12px 40px rgba(0,0,0,.55); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.45;padding-inline:16px;padding-block:24px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+.wrap{max-width:1080px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:40px;align-items:start}
+.phone-col{order:2}
+.panel{order:1;min-width:0}
+@media (max-width:900px){.wrap{grid-template-columns:minmax(0,1fr);gap:28px}.phone-col{order:1}.panel{order:2}}
+
+/* panel */
+.panel h1{font-family:var(--serif);font-size:34px;line-height:1.1;margin:0 0 6px;color:var(--head);text-wrap:balance}
+.panel .sub{color:var(--muted);margin:0 0 20px;max-width:50ch}
+.badge{display:inline-block;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);background:var(--soft);padding:4px 10px;border-radius:99px;margin-bottom:14px}
+.stages{display:flex;flex-direction:column;gap:10px}
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.stage>button{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;cursor:pointer}
+.stage>button:focus-visible{outline:3px solid var(--brand);outline-offset:-3px}
+.num{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:700;color:#fff;font-size:14px}
+.stage .nm{font-weight:700;flex:1}
+.stage.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.detail{padding:2px 16px 16px 56px;display:none;gap:10px;flex-direction:column}
+.stage.on .detail{display:flex}
+.detail dt{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--brand)}
+.detail dd{margin:2px 0 0}
+.note{margin-top:18px;font-size:13px;color:var(--muted);max-width:60ch}
+.themebtn{margin-top:14px;background:none;border:1px solid var(--line);border-radius:99px;padding:6px 14px;font-size:13px;color:var(--muted)}
+
+/* phone */
+.phone{position:relative;width:100%;max-width:390px;height:790px;margin-inline:auto;border:10px solid var(--frame);border-radius:46px;background:var(--surface);box-shadow:var(--shadow);overflow:hidden;overflow:clip;display:flex;flex-direction:column}
+.status{flex:none;display:flex;justify-content:space-between;align-items:center;padding:10px 22px 4px;font-size:12px;font-weight:600;color:var(--muted)}
+.screen{flex:1;overflow-y:auto;padding:8px 18px 90px;min-height:0}
+.top{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.top h2{font-family:var(--serif);font-size:24px;margin:0;color:var(--head);flex:1;line-height:1.15}
+.iconbtn{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;color:var(--ink);flex:none}
+.h2s{font-family:var(--serif);color:var(--head);margin:0;line-height:1.15}
+.muted{color:var(--muted)}
+.bal{background:var(--soft);border-radius:18px;padding:14px 16px;margin:12px 0}
+.bal small{color:var(--muted)}
+.bal b{display:block;font-family:var(--serif);font-size:30px;line-height:1.15;font-variant-numeric:tabular-nums}
+.banner{background:var(--grad);color:#fff;border-radius:20px;padding:18px;margin:12px 0}
+.banner h3{font-family:var(--serif);font-size:22px;line-height:1.15;margin:0 0 6px;text-wrap:balance}
+.banner p{margin:0 0 14px;opacity:.92}
+.btn{border:0;border-radius:14px;padding:13px 16px;font-weight:700;background:var(--btn);color:#fff;width:100%}
+.btn.alt{background:var(--surface);color:var(--accent);border:1.5px solid var(--accent)}
+.btn.light{background:#fff;color:#1B2A5C}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn.small{width:auto;padding:9px 14px;font-size:14px}
+.btn.gap{margin-top:12px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}
+.quick{border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:10px 2px;font-size:12px;text-align:center;color:var(--ink)}
+.quick i{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;background:var(--soft);margin:0 auto 6px;color:var(--accent)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin:12px 0}
+.card h3{margin:0 0 4px;font-size:16px}
+.card p{margin:0;color:var(--muted)}
+.row{display:flex;align-items:center;gap:12px;justify-content:space-between}
+.list{display:flex;flex-direction:column}
+.list .li{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.list .li:first-child{border-top:0}
+.amt{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.amt.neg{color:var(--warn)}
+.amt.pos{color:var(--ok)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--line);background:var(--surface);border-radius:99px;padding:7px 13px;font-size:14px}
+.chip.on{border-color:var(--accent);background:var(--accent);color:#fff}
+.trust{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
+.trust:first-of-type{border-top:0}
+.dot{flex:none;width:34px;height:34px;border-radius:50%;background:var(--soft);display:grid;place-items:center;color:var(--head)}
+.steps{display:flex;gap:6px;margin:4px 0 16px}
+.steps span{flex:1;height:6px;border-radius:9px;background:var(--line)}
+.steps span.on{background:var(--brand)}
+label.f{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:12px 0 4px}
+input.t,select.t{width:100%;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:12px;font:inherit}
+.pw{position:relative}
+.pw input{padding-right:48px}
+.eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:38px;height:38px;border:0;background:none;display:grid;place-items:center;color:var(--muted);border-radius:10px}
+.eye[aria-pressed="true"]{color:var(--accent)}
+.err{margin:10px 0 0;color:var(--warn);font-weight:600;font-size:14px}
+.big{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.bigbtn{border:1.5px solid var(--line);background:var(--surface);border-radius:18px;padding:18px 10px;display:flex;flex-direction:column;align-items:center;gap:8px;font-weight:700;color:var(--head)}
+.bigbtn svg{color:var(--brand)}
+.scan{border-radius:18px;background:var(--soft);padding:18px;text-align:center;position:relative;overflow:hidden}
+.scan .bar{height:3px;background:var(--brand);position:absolute;left:0;right:0;top:0;animation:sweep 1.2s ease-in-out infinite}
+@keyframes sweep{0%{top:0}100%{top:100%}}
+.pill{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--soft);color:var(--muted)}
+.pill.ok{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+.sums{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sum{background:var(--soft);border-radius:14px;padding:10px 12px}
+.sum small{color:var(--muted);display:block}
+.sum b{font-size:18px;font-variant-numeric:tabular-nums}
+.sum.wide{grid-column:1/-1;background:var(--grad);color:#fff}
+.sum.wide small{color:inherit;opacity:.85}
+.sum.wide b{font-family:var(--serif);font-size:28px}
+.ring{width:92px;height:92px;flex:none}
+.nps{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:10px}
+.nps button{border:1.5px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 0;font-weight:700}
+.nps button.on{background:var(--btn);color:#fff;border-color:var(--accent)}
+.code{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700;background:var(--soft);padding:8px 12px;border-radius:10px;letter-spacing:.06em}
+.tabs{position:absolute;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(5,1fr);background:var(--surface);border-top:1px solid var(--line);padding:6px 4px 10px;z-index:4}
+.tab{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11.5px;padding:6px 0;color:var(--muted);border-radius:12px}
+.tab.on{color:var(--brand);font-weight:700}
+.toast{position:absolute;left:16px;right:16px;bottom:96px;background:var(--ink);color:var(--surface);padding:11px 14px;border-radius:12px;font-size:14px;z-index:20;opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none}
+.toast.show{opacity:1;transform:none}
+
+/* oscuro: bienvenida e inicio de sesion */
+.phone[data-dark]{background:#0A2A55}
+.phone[data-dark] .status{color:rgba(255,255,255,.85)}
+.phone[data-dark] .screen{background:linear-gradient(180deg,#0A2A55 0%,#14246E 55%,#0B1F4D 100%);color:#fff;padding-bottom:24px}
+.phone[data-notabs] .fab{bottom:14px}
+.phone[data-nofab] .fab{display:none}
+.dk{position:relative;min-height:100%;display:flex;flex-direction:column}
+.dk .waves{position:absolute;inset:-8px -18px auto -18px;width:calc(100% + 36px);height:440px;pointer-events:none}
+.dk>*:not(.waves){position:relative}
+.logo{display:flex;align-items:center;gap:10px;margin:6px 0 26px}
+.logo .mark{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,#3A7BFF,#14B8A6);display:grid;place-items:center}
+.logo b{font-size:19px;letter-spacing:.01em}
+.logo small{font-weight:500;opacity:.7;font-size:12px;margin-left:4px}
+.wl{margin-top:44px}
+.wl h2{font-family:var(--serif);font-size:36px;line-height:1.1;margin:0 0 16px;color:#fff;text-wrap:balance;font-weight:600}
+.wl p{margin:0;font-size:17px;color:rgba(255,255,255,.88);max-width:30ch}
+.wl-act{margin-top:auto;padding-top:28px;display:flex;flex-direction:column;gap:12px}
+.wbtn{border:1.5px solid rgba(255,255,255,.75);background:transparent;color:#fff;border-radius:12px;padding:14px;font-weight:600;font-size:16px;width:100%}
+.wbtn.solid{background:#fff;border-color:#fff;color:#14327C}
+.lg-hello{font-family:var(--serif);font-size:30px;margin:0 0 4px;color:#fff;line-height:1.1}
+.lg-sub{margin:0 0 14px;color:rgba(255,255,255,.8)}
+.dk label.f{color:rgba(255,255,255,.85)}
+.dk .t{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.28);color:#fff}
+.dk .t::placeholder{color:rgba(255,255,255,.6)}
+.dk .eye{color:rgba(255,255,255,.8)}
+.dk .err{color:#FFB4A0}
+.btn.lg{background:linear-gradient(135deg,#14B8A6 0%,#2F6BFF 100%);color:#fff;margin-top:16px}
+.lnk{all:unset;cursor:pointer;display:block;text-align:center;margin:14px auto 0;color:rgba(255,255,255,.88);text-decoration:underline;font-size:14px}
+.lnk.dark{color:var(--accent)}
+.lnk:focus-visible,.biobtn:focus-visible,.wbtn:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.bio{margin-top:auto;padding-top:22px;display:flex;flex-direction:column;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,.88)}
+.biobtn{all:unset;cursor:pointer;width:58px;height:58px;border-radius:18px;border:1.5px solid rgba(255,255,255,.4);display:grid;place-items:center;color:#fff}
+.faceid{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);width:158px;padding:18px 10px 14px;border-radius:24px;background:rgba(240,244,255,.96);color:#14203F;display:flex;flex-direction:column;align-items:center;gap:8px;box-shadow:0 14px 40px rgba(0,0,0,.4);z-index:6;text-align:center}
+.faceid .fi{color:#2F6BFF;position:relative}
+.faceid.scan .fi::after{content:"";position:absolute;left:4px;right:4px;height:2px;background:#14B8A6;top:0;animation:sweep 1s ease-in-out infinite alternate}
+.faceid.ok .fi{color:#0E9F8E}
+.faceid small{color:#56628A}
+.fade>*{animation:rise .6s both}
+.fade>*:nth-child(2){animation-delay:.12s}.fade>*:nth-child(3){animation-delay:.24s}.fade>*:nth-child(4){animation-delay:.36s}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* registro */
+.prog{height:6px;background:var(--line);border-radius:9px;margin:2px 0 18px;overflow:hidden}
+.prog i{display:block;height:100%;background:linear-gradient(90deg,#14B8A6,#2F6BFF);border-radius:9px;transition:width .3s}
+.rh{font-family:var(--serif);font-size:25px;line-height:1.15;margin:0 0 6px;color:var(--head);text-wrap:balance}
+.rs{margin:0 0 6px;color:var(--muted)}
+.two{display:grid;grid-template-columns:110px 1fr;gap:10px}
+.rules{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:9px}
+.rules li{display:flex;gap:10px;align-items:center;font-size:14px;color:var(--muted)}
+.rules li svg{flex:none;color:var(--line)}
+.rules li.ok{color:var(--ink)}
+.rules li.ok svg{color:var(--ok)}
+.rules li.bad svg{color:var(--warn)}
+.meter{height:5px;border-radius:9px;background:var(--line);margin-top:12px;overflow:hidden}
+.meter i{display:block;height:100%;border-radius:9px;background:var(--warn);width:0;transition:width .25s,background .25s}
+.meter i.mid{background:#E8A32A}.meter i.hi{background:var(--ok)}
+.tip3{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:16px;padding:12px;margin:10px 0}
+.tip3 .dot{width:44px;height:44px;background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}
+.photo{position:relative;width:190px;height:190px;border-radius:50%;margin:8px auto 14px;padding:5px;background:conic-gradient(#14B8A6,#2F6BFF,#14B8A6)}
+.photo .in{width:100%;height:100%;border-radius:50%;overflow:hidden;background:var(--soft);display:grid;place-items:center;color:var(--muted);position:relative}
+.photo img{width:100%;height:100%;object-fit:cover;display:block}
+.photo .bar{position:absolute;left:0;right:0;top:0;height:3px;background:#14B8A6;animation:sweep 1.1s ease-in-out infinite alternate}
+.cboxes{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:16px 0}
+.cbox{width:100%;aspect-ratio:1/1.15;text-align:center;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);font:inherit;font-size:22px;font-weight:700;padding:0}
+.cbox.bad{border-color:var(--warn)}
+.mail{display:flex;gap:12px;background:var(--soft);border-radius:16px;padding:12px 14px;margin-top:14px}
+.mail .dot{background:var(--surface);color:var(--accent)}
+.mail b.cd{font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:.12em;font-size:18px}
+.hero{display:block;width:120px;margin:6px auto 4px}
+.say{position:relative;background:var(--soft);border-radius:20px;padding:16px;margin-top:10px;min-height:96px;font-size:16px}
+.say::before{content:"";position:absolute;top:-8px;left:50%;margin-left:-8px;width:16px;height:16px;background:var(--soft);transform:rotate(45deg);border-radius:3px}
+.done-ico{width:78px;height:78px;margin:14px auto 12px;display:grid;place-items:center;border-radius:50%;background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok)}
+.ticket{border:1px dashed var(--line);border-radius:16px;padding:14px;margin:14px 0}
+
+/* transferir */
+.trhead{background:var(--grad);margin:-8px -18px 0;padding:10px 18px 56px;border-radius:0 0 28px 28px;color:#fff;display:flex;align-items:center;gap:10px}
+.trhead h2{font-family:var(--serif);font-size:24px;margin:0;flex:1}
+.trhead .iconbtn{background:rgba(255,255,255,.18);border:0;color:#fff}
+.sbar{display:flex;gap:10px;margin:-34px 0 14px;position:relative}
+.sbar .sf{flex:1;display:flex;align-items:center;gap:8px;background:var(--surface);border-radius:99px;padding:0 14px;box-shadow:0 8px 22px rgba(20,50,140,.2);color:var(--muted)}
+.sbar input{flex:1;min-width:0;border:0;background:none;color:var(--ink);font:inherit;padding:13px 0;outline:0}
+.sbar .qr{width:48px;height:48px;border-radius:15px;border:0;background:#1B2A5C;color:#fff;display:grid;place-items:center;box-shadow:0 8px 22px rgba(20,50,140,.2)}
+.favs{display:flex;gap:12px;overflow-x:auto;padding:4px 2px 10px}
+.fav{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;min-width:62px;color:var(--ink)}
+.av{width:54px;height:54px;border-radius:17px;display:grid;place-items:center;font-weight:700;color:#fff;font-size:18px}
+.contact{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;width:100%;padding:11px 0;border-top:1px solid var(--line);cursor:pointer}
+.contact:first-child{border-top:0}
+.contact:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+.contact .av{width:42px;height:42px;border-radius:13px;font-size:15px}
+.contact b{display:block}
+.contact small{color:var(--muted)}
+.mini{display:inline-flex;align-items:center;gap:6px}
+.amtin{font-family:var(--serif);font-size:36px;text-align:center;border:0;border-bottom:2px solid var(--line);background:none;color:var(--ink);width:100%;padding:8px 0;outline:0;font-variant-numeric:tabular-nums}
+.amtin:focus{border-color:var(--accent)}
+
+/* perfil y aprender */
+.avatar{width:58px;height:58px;border-radius:19px;background:var(--grad);color:#fff;display:grid;place-items:center;font-family:var(--serif);font-size:24px;flex:none}
+.crit{padding:12px 0;border-top:1px solid var(--line)}
+.crit:first-of-type{border-top:0}
+.crit .hd{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.crit .hd b{font-size:15px}
+.bar2{height:8px;border-radius:9px;background:var(--line);margin:8px 0 6px;overflow:hidden}
+.bar2 i{display:block;height:100%;border-radius:9px;background:var(--btn)}
+.crit p{margin:0;font-size:13.5px;color:var(--muted)}
+.lesson{all:unset;box-sizing:border-box;display:flex;gap:12px;align-items:center;width:100%;cursor:pointer;padding:6px 0}
+.lesson:focus-visible{outline:3px solid var(--brand);outline-offset:3px}
+.opt{display:block;width:100%;text-align:left;border:1.5px solid var(--line);background:var(--surface);border-radius:14px;padding:12px 14px;margin-top:8px}
+.opt.good{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,transparent)}
+.opt.wrong{border-color:var(--warn);background:color-mix(in srgb,var(--warn) 10%,transparent)}
+ul.pts{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+
+/* asistente */
+.fab{position:absolute;right:6px;bottom:64px;border:0;background:none;padding:0;z-index:5;display:block;cursor:pointer}
+.hint{position:absolute;right:60px;bottom:56px;width:max-content;max-width:190px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:16px 16px 4px 16px;padding:9px 12px;font-size:14px;font-weight:600;box-shadow:0 8px 22px rgba(20,50,140,.18);opacity:0;transform:translateY(6px) scale(.96);transition:.25s;pointer-events:none;text-align:left}
+.hint.show{opacity:1;transform:none}
+.mascot-wrap{display:block;width:74px}
+.mascot-wrap.big{width:56px;flex:none}
+.mascot{display:block;width:100%;height:auto;overflow:visible}
+.mascot-wrap:not(.big) .mascot,.hero .mascot{animation:float 3.2s ease-in-out infinite;filter:drop-shadow(0 8px 10px rgba(20,50,140,.3))}
+.mascot .look{transition:transform .12s ease-out;transform:translate(calc(var(--lx,0)*1px),calc(var(--ly,0)*1px))}
+.mascot .eyes{transform-origin:60px 47px;transition:transform .2s}
+.mascot .eyeball{transform-box:fill-box;transform-origin:center;animation:blink 4.6s infinite}
+.mascot .m-talk,.mascot .m-think,.mascot .m-happy{display:none}
+.mascot[data-state="talk"] .m-idle,.mascot[data-state="think"] .m-idle,.mascot[data-state="happy"] .m-idle{display:none}
+.mascot[data-state="talk"] .m-talk{display:block;transform-box:fill-box;transform-origin:center;animation:talk .26s ease-in-out infinite alternate}
+.mascot[data-state="think"] .m-think{display:block}
+.mascot[data-state="happy"] .m-happy{display:block}
+.mascot[data-state="think"] .look{transform:translate(3px,-3px)}
+.mascot[data-state="listen"] .eyes{transform:scale(1.14)}
+.mascot[data-state="happy"] .eyeball{animation:none;transform:scaleY(.5)}
+.mascot .led{animation:pulse 2.2s ease-in-out infinite}
+.mascot[data-state="think"] .led{animation-duration:.6s}
+.mascot .arm{transform-box:view-box;transform-origin:92px 98px}
+.mascot.wave .arm{animation:wave .8s ease-in-out 2}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes blink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.08)}}
+@keyframes talk{from{transform:scaleY(.35)}to{transform:scaleY(1.5)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes wave{0%,100%{transform:rotate(0)}30%{transform:rotate(-38deg)}70%{transform:rotate(14deg)}}
+@keyframes dots{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.chat{position:absolute;inset:0;background:var(--surface);z-index:15;display:flex;flex-direction:column;transform:translateY(102%);visibility:hidden;transition:transform .28s ease,visibility 0s linear .28s}
+.chat.open{transform:none;visibility:visible;transition-delay:0s}
+.chat header{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--grad);color:#fff}
+.chat header .who{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}
+.chat header .who span{font-size:13px;opacity:.9}
+.chat header button{border:0;background:rgba(255,255,255,.2);color:inherit;border-radius:10px;width:34px;height:34px;font-size:20px}
+.msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:0}
+.m{max-width:86%;padding:10px 13px;border-radius:16px;white-space:pre-line}
+.m.bot{background:var(--soft);border-bottom-left-radius:4px;align-self:flex-start}
+.m.me{background:var(--btn);color:#fff;border-bottom-right-radius:4px;align-self:flex-end}
+.m.typing{display:flex;gap:5px;padding:14px}
+.m.typing i{width:8px;height:8px;border-radius:50%;background:var(--muted);animation:dots 1s infinite}
+.m.typing i:nth-child(2){animation-delay:.15s}.m.typing i:nth-child(3){animation-delay:.3s}
+.sugg{padding:0 14px 8px}
+.sugg .chip{font-size:13px}
+.cform{display:flex;gap:8px;padding:10px 14px 6px;border-top:1px solid var(--line)}
+.cform input{flex:1;min-width:0}
+.ainote{margin:0;padding:0 14px 14px;font-size:12px;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:420px){.panel h1{font-size:28px}.phone{height:770px}}
+
+/* app en celular: pantalla completa, sin marco ni panel */
+@media (max-width:600px){
+ body{padding:0}
+ .wrap{display:block;max-width:none}
+ .panel{display:none}
+ .phone{max-width:none;width:100%;height:100vh;height:100dvh;border:0;border-radius:0;box-shadow:none}
+ .status{display:none}
+ .phone-col{order:0}
+}
+@media (display-mode:standalone){
+ body{padding:0}.wrap{display:block;max-width:none}.panel{display:none}
+ .phone{max-width:none;width:100%;height:100vh;height:100dvh;border:0;border-radius:0;box-shadow:none}.status{display:none}
+}
+
+/* modo app: solo el celular. Con ?demo en el link se muestra el panel del recorrido de Rosa */
+html:not(.demo-on) .panel{display:none}
+html:not(.demo-on) .wrap{display:block;max-width:420px}
+html:not(.demo-on) .status{display:none}
+@media (min-width:601px){html:not(.demo-on) body{display:flex;justify-content:center;align-items:center;min-height:100vh;padding-block:12px}}
+</style>
+
+<script>try{if(/[?&]demo/.test(location.search))document.documentElement.className+=' demo-on'}catch(e){}</script>
+<div class="wrap">
+  <section class="panel" aria-label="Recorrido de Rosa">
+    <span class="badge">Prototipo funcional · para exposición</span>
+    <h1>App Certus Banco</h1>
+    <p class="sub">Crea tu usuario en el celular y usa la app. A la izquierda están las etapas del recorrido de Rosa, la buyer persona del proyecto.</p>
+    <div class="stages" id="stages"></div>
+    <p class="note">En esta demostración las cuentas se guardan solo en este navegador. La foto, el correo y los montos son simulados: no se envía nada a nadie. Para una app real hace falta un servidor con verificación de identidad y envío de correos.</p>
+    <button class="themebtn" id="themebtn" type="button">Cambiar a modo oscuro</button> <button class="themebtn" id="resetbtn" type="button">Borrar cuentas de prueba</button>
+  </section>
+
+  <section class="phone-col" aria-label="App Certus Banco">
+    <div class="phone" id="phone">
+      <div class="status"><span>Certus Banco</span><span>Con señal</span></div>
+      <main class="screen" id="screen"></main>
+      <button class="fab" id="fab" type="button" aria-label="Abrir el chat con la asistente de Certus Banco"><span class="hint" id="hint">¿Dudas? ¡Pregúntame!</span><span class="mascot-wrap" id="fabm"></span></button>
+      <nav class="tabs" id="tabs" aria-label="Menú de la app"></nav>
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+      <input type="file" id="fotoin" accept="image/*" capture="user" hidden>
+      <input type="file" id="boletain" accept="image/*" capture="environment" hidden>
+      <section class="chat" id="chat" aria-label="Chat de Certus Banco">
+        <header><span class="mascot-wrap big" id="chatm"></span><div class="who"><b>Asistente Certus</b><span id="status">En línea</span></div><button type="button" id="chatclose" aria-label="Cerrar chat">&times;</button></header>
+        <div class="msgs" id="msgs" aria-live="polite"></div>
+        <div class="sugg chips" id="sugg"></div>
+        <form class="cform" id="cform"><input class="t" id="cin" placeholder="Escribe tu duda" autocomplete="off"><button class="btn small" type="submit">Enviar</button></form>
+        <p class="ainote" id="ainote"></p>
+      </section>
+    </div>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+(function(){
+var $=function(s){return document.querySelector(s)};
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+var sv=function(d,p){return '<svg width="'+(p||22)+'" height="'+(p||22)+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>'};
+var I={
+ back:sv('<path d="M15 5l-7 7 7 7"/>',20),
+ cam:sv('<path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',30),
+ mic:sv('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/>',30),
+ home:sv('<path d="M4 11l8-7 8 7v9H4z"/>'),
+ scan:sv('<path d="M4 8V6a2 2 0 012-2h2M16 4h2a2 2 0 012 2v2M20 16v2a2 2 0 01-2 2h-2M8 20H6a2 2 0 01-2-2v-2M4 12h16"/>'),
+ flow:sv('<path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/>'),
+ user:sv('<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/>'),
+ book:sv('<path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2z"/><path d="M4 21V5M9 8h6"/>'),
+ send:sv('<path d="M5 12h14M13 6l6 6-6 6"/>',20),
+ check:sv('<path d="M5 12l5 5 9-10"/>'),
+ circ:sv('<circle cx="12" cy="12" r="9"/>',20),
+ cchk:sv('<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>',20),
+ cx:sv('<circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/>',20),
+ lock:sv('<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/>',18),
+ eye:sv('<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'),
+ eyeoff:sv('<path d="M3 3l18 18M10.6 6.1A9.8 9.8 0 0112 6c6 0 10 6 10 6a17 17 0 01-3 3.6M6.5 7.4A17 17 0 002 12s4 7 10 7a9.6 9.6 0 004.2-1M9.9 9.9a3 3 0 004.2 4.2"/>'),
+ search:sv('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',20),
+ qr:sv('<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><path d="M14 14h3v3M20 14v6h-3M14 20v-3"/>',24),
+ help:sv('<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 114 2c-1 .7-1.5 1.2-1.5 2.5M12 17h.01"/>',20),
+ mail:sv('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',22),
+ xls:sv('<path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5M9 13l4 5M13 13l-4 5"/>',20),
+ sun:sv('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/>',26),
+ glasses:sv('<circle cx="7" cy="14" r="3.5"/><circle cx="17" cy="14" r="3.5"/><path d="M10.5 14h3M3.5 14L5 8M20.5 14L19 8"/>',26),
+ still:sv('<circle cx="12" cy="9" r="4"/><path d="M5 21c.8-3.5 3.5-5.5 7-5.5s6.2 2 7 5.5"/><path d="M2 9h2M20 9h2" />',26),
+ scanface:'<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 012-2h2M16 4h2a2 2 0 012 2v2M20 16v2a2 2 0 01-2 2h-2M8 20H6a2 2 0 01-2-2v-2"/><path d="M9 10v1.5M15 10v1.5M12 10v3.5h-1M9 16c1.7 1.3 4.3 1.3 6 0"/></svg>',
+ face:sv('<circle cx="12" cy="12" r="9"/><path d="M8 20c1-3 7-3 8 0M12 6a3 3 0 100 6 3 3 0 000-6z"/>',48),
+ logo:'<svg width="24" height="24" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><rect x="4" y="13" width="4" height="7" rx="1.5"/><rect x="10" y="9" width="4" height="11" rx="1.5"/><rect x="16" y="4" width="4" height="16" rx="1.5"/></svg>'
+};
+var COL={1:'#E5484D',2:'#F29B38',3:'#F5D547',4:'#A8D86B',5:'#4CC38A'};
+function face(l,s){
+  var m=l>=4?'<path d="M8 14.2Q12 '+(l===5?19.5:18.5)+' 16 14.2" fill="none" stroke="#1E1E2E" stroke-width="1.4" stroke-linecap="round"/>':
+      l===3?'<path d="M8.5 16H15.5" stroke="#1E1E2E" stroke-width="1.4" stroke-linecap="round"/>':
+      '<path d="M8 17.5Q12 13.5 16 17.5" fill="none" stroke="#1E1E2E" stroke-width="1.4" stroke-linecap="round"/>';
+  return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="'+COL[l]+'" stroke="#1E1E2E" stroke-width="1.2"/><circle cx="8.6" cy="9.8" r="1.2" fill="#1E1E2E"/><circle cx="15.4" cy="9.8" r="1.2" fill="#1E1E2E"/>'+m+'</svg>';
+}
+var STAGES=[
+ {n:'Conciencia',lvl:3,feel:'Curiosa, pero con duda',pain:'Cree que los bancos son para negocios grandes',sol:'Bienvenida clara de Banco Certus dentro de la app y el mensaje "Ordena tu negocio en 2 minutos".'},
+ {n:'Consideración',lvl:2,feel:'Desconfiada: teme costos ocultos',pain:'No entiende términos bancarios y duda de dar sus datos',sol:'Burbuja de chat para resolver dudas, tutorial de 1 minuto y versión básica gratis a la vista.'},
+ {n:'Decisión',lvl:4,feel:'Ilusionada y aliviada',pain:'Formularios largos y papeles que no tiene',sol:'Registro con DNI, foto y correo desde el celular, sin papeles y con la asistente como guía.'},
+ {n:'Retención',lvl:3,feel:'Cansancio al inicio, luego orgullo',pain:'Se olvida de registrar, hay poca señal y mezcla gastos',sol:'Escaneo de boletas en menos de 2 minutos, flujo de caja, perfil que se construye con el uso y educación financiera.'},
+ {n:'Recomendación',lvl:5,feel:'Orgullosa y satisfecha',pain:'No tiene cómo compartir ni premio por recomendar',sol:'Aviso de logro, invitación y encuesta de satisfacción dentro de la app.'}
+];
+
+/* ---------- datos guardados en este navegador ---------- */
+var mem={};
+function lsGet(k){try{return localStorage.getItem(k)}catch(e){return mem[k]||null}}
+function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){mem[k]=v}}
+function lsDel(k){try{localStorage.removeItem(k)}catch(e){delete mem[k]}}
+var DB={users:{},last:null};
+var CFB=window.CertusFB||null,saveT=0;
+function cloud(){return !!CFB}
+try{var raw=lsGet('certus_db_v1');if(raw){var p=JSON.parse(raw);if(p&&p.users)DB=p}}catch(e){}
+function save(){
+ if(cloud()){clearTimeout(saveT);saveT=setTimeout(function(){var u=U();if(u&&S.uid)CFB.saveUser(S.uid,u).catch(function(){})},400);return}
+ lsSet('certus_db_v1',JSON.stringify(DB))}
+async function hashPw(p,salt){try{var b=new TextEncoder().encode(salt+':'+p);var h=await crypto.subtle.digest('SHA-256',b);return Array.from(new Uint8Array(h)).map(function(x){return x.toString(16).padStart(2,'0')}).join('')}catch(e){var x=5381,s=salt+':'+p;for(var i=0;i<s.length;i++)x=((x<<5)+x+s.charCodeAt(i))|0;return 'w'+x}}
+function rid(n){var a='',c='abcdef0123456789';for(var i=0;i<n;i++)a+=c[Math.floor(Math.random()*16)];return a}
+
+/* ---------- estado ---------- */
+function freshReg(){return {step:1,sub:'',doc:'DNI',dni:'',nombres:'',apellidos:'',celular:'',negocio:'',fs:'tips',faceUrl:'',email:'',code:'',left:60,usuario:'',pass:'',pass2:'',err:''}}
+var S={screen:'welcome',user:null,uid:null,reg:freshReg(),face:'idle',lg:'',tut:0,hide:false,
+ scan:{kind:'compra',st:'idle',flag:null,monto:'',comercio:'',voice:false},
+ tr:{q:'',who:null,monto:'',err:''},lesson:null,pick:null,nps:null,copied:false,sent:false,expl:false};
+var chatOpen=false,toastT,timerI=0;
+function U(){return S.user?DB.users[S.user]:null}
+function fmt(n){return 'S/ '+Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function fdate(d){d=d?new Date(d):new Date();var M=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];var z=function(n){return String(n).padStart(2,'0')};return d.getDate()+' '+M[d.getMonth()]+' '+d.getFullYear()+' | '+z(d.getHours())+':'+z(d.getMinutes())}
+function maskEmail(e){var a=e.split('@');return (a[0].slice(0,3)+'******')+'@'+(a[1]||'')}
+function maskDni(d){return d.slice(0,2)+'****'+d.slice(-2)}
+function sumT(t){var u=U();return u?u.movs.filter(function(x){return x.t===t}).reduce(function(a,x){return a+x.m},0):0}
+function cnt(t){var u=U();return u?u.movs.filter(function(x){return x.t===t}).length:0}
+function addMov(o){var u=U();o.id=rid(6);o.date=new Date().toISOString();u.movs.push(o);save()}
+function top(title,back){return '<div class="top">'+(back?'<button class="iconbtn" data-go="'+back+'" aria-label="Volver">'+I.back+'</button>':'')+'<h2>'+title+'</h2></div>'}
+function stepTop(prev,pct){return '<div class="top" style="margin-bottom:6px"><button class="iconbtn" data-act="rprev" aria-label="Volver">'+I.back+'</button></div><div class="prog" role="progressbar" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100"><i style="width:'+pct+'%"></i></div>'}
+
+/* ---------- perfil: se construye con el uso ---------- */
+function profile(){
+ var u=U(),pays=cnt('tr')+cnt('pago'),nv=cnt('v'),V=sumT('v'),G=sumT('g')+sumT('pago');
+ var s1=Math.min(100,pays*20);
+ var margin=V>0?Math.max(0,Math.min(1,(V-G)/V)):0, rel=Math.min(1,nv/3), s2=Math.round(margin*rel*100);
+ var s3=Math.min(100,nv*20);
+ var m4=20+(u.face?15:0)+(u.email?15:0)+(u.apertura?20:0)+(u.perm?15:0)+(u.movs.length?15:0), s4=Math.min(100,m4);
+ var all=Math.round((s1+s2+s3+s4)/4);
+ return {pays:pays,nv:nv,V:V,G:G,margin:margin,s:[s1,s2,s3,s4],all:all,apto:all>=70};
+}
+
+/* ---------- pantallas ---------- */
+var LESSONS=[
+ {t:'Separa tu dinero',pts:['Usa una cuenta solo para el negocio y otra para tu familia.','Págate un sueldo fijo cada semana.','Así sabes cuánto gana de verdad tu negocio.'],q:'¿Para qué sirve tener una cuenta solo para el negocio?',o:['Para pagar más comisiones','Para saber cuánto gana el negocio','Para gastar sin anotar'],ok:1},
+ {t:'Cuánto ganas de verdad',pts:['Lo que te queda = ventas − compras y gastos.','Anota todo, también lo pequeño.','Mira tu flujo de caja cada semana.'],q:'Si vendes S/ 1,000 y gastas S/ 700, ¿cuánto te queda?',o:['S/ 1,700','S/ 700','S/ 300'],ok:2},
+ {t:'Ahorra cada semana',pts:['Guarda primero y gasta después.','Un monto pequeño y fijo funciona mejor que uno grande y raro.','Ponle nombre a tu meta.'],q:'¿Qué funciona mejor para ahorrar?',o:['Guardar un monto fijo cada semana','Ahorrar solo lo que sobra','Esperar a fin de año'],ok:0},
+ {t:'Tu historial crediticio',pts:['Es el registro de cómo manejas tu dinero y tus pagos.','Pagar a tiempo y registrar tus ingresos lo mejora.','Con historial, el banco puede ofrecerte crédito en mejores condiciones.'],q:'¿Qué ayuda a construir un buen historial?',o:['Prestar tu usuario a un amigo','No usar nunca el banco','Pagar a tiempo'],ok:2},
+ {t:'Cuida tu usuario y clave',pts:['No compartas tu usuario ni tu clave, ni con el banco.','Usa una clave distinta a tu usuario.','Desconfía de mensajes que te piden códigos.'],q:'Alguien dice ser del banco y te pide tu código de 6 dígitos. ¿Qué haces?',o:['Se lo envío por mensaje','Se lo doy si suena amable','No se lo doy a nadie'],ok:2}
+];
+var CONTACTS=[['Mamá','987 654 321','#4B55C8'],['Carlos Proveedor','954 112 308','#0A8FC4'],['Lucía Mercado','936 482 115','#6A4CFF'],['Tienda Don Pepe','921 700 456','#0B7F86'],['Abel','934 951 455','#2F6BFF'],['Jasmin','969 011 510','#4B55C8'],['Sandrita','986 031 550','#0A8FC4']];
+var DAYS=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+
+function userRules(v){
+ var r=[{ok:v.length>=6&&v.length<=15&&/^[A-Za-z0-9_-]+$/.test(v),t:'De 6 a 15 caracteres. Opcional "-" y "_".'},
+  {ok:/[A-Za-z]/.test(v)&&/\d/.test(v),t:'Utiliza letras y números.'},
+  {ok:v.length>0&&!taken(v)&&!personal(v),t:taken(v)&&v?'Ese usuario ya existe, prueba otro.':(personal(v)&&v?'No uses tu DNI ni tus nombres.':'No uses tus datos personales ni uno que ya exista.')}];
+ return r;
+}
+function taken(v){return !!DB.users[v.toLowerCase()]}
+function personal(v){var l=v.toLowerCase(),R=S.reg;return (R.dni&&l.indexOf(R.dni)>-1)||(R.nombres&&R.nombres.length>2&&l.indexOf(R.nombres.toLowerCase().split(' ')[0])>-1)}
+function passRules(p,p2){
+ var u=S.reg.usuario.toLowerCase();
+ return [{ok:p.length>=8&&p.length<=20,t:'De 8 a 20 caracteres.'},
+  {ok:/[a-z]/.test(p)&&/[A-Z]/.test(p),t:'Al menos una letra mayúscula y minúscula.'},
+  {ok:/\d/.test(p),t:'Al menos un número.'},
+  {ok:p.length>0&&p.toLowerCase()!==u,t:'Distinta a tu usuario.'},
+  {ok:p.length>0&&p===p2,t:'Las dos contraseñas coinciden.'}];
+}
+function rulesHtml(rs){return rs.map(function(x){return '<li class="'+(x.ok?'ok':'')+'">'+(x.ok?I.cchk:I.circ)+'<span>'+esc(x.t)+'</span></li>'}).join('')}
+function pwField(id,label,key,val,ph,auto){return '<label class="f" for="'+id+'">'+label+'</label><div class="pw"><input class="t" id="'+id+'" type="password" data-in="'+key+'" value="'+esc(val)+'" placeholder="'+ph+'" autocomplete="'+(auto||'new-password')+'"><button type="button" class="eye" data-eye="'+id+'" aria-pressed="false" aria-label="Mostrar contraseña">'+I.eye+'</button></div>'}
+
+var SCREENS={
+welcome:function(){
+ var arcs=[60,100,140,180,220,260,300].map(function(r){return '<circle cx="320" cy="-10" r="'+(r*1.6)+'" fill="none" stroke="#fff" stroke-opacity=".08" stroke-width="1.5"/>'}).join('');
+ return '<div class="dk"><svg class="waves" viewBox="0 0 360 440" aria-hidden="true" preserveAspectRatio="xMaxYMin slice">'+arcs+'</svg>'+
+ '<div class="logo"><span class="mark">'+I.logo+'</span><b>Banco Certus<small>v1.0</small></b></div>'+
+ '<div class="wl fade"><h2>Te damos la bienvenida a Banco Certus</h2><p>Estamos aquí para acompañarte a ordenar tu negocio y cumplir tus metas.</p></div>'+
+ '<div class="wl-act fade"><button class="wbtn solid" data-act="tologin">Iniciar sesión</button><button class="wbtn" data-act="toreg">Crear usuario y contraseña</button><button class="lnk" data-act="toreg">Aún no soy cliente</button></div></div>'},
+
+login:function(){
+ var arcs=[60,100,140,180,220,260,300].map(function(r){return '<circle cx="320" cy="-10" r="'+(r*1.6)+'" fill="none" stroke="#fff" stroke-opacity=".08" stroke-width="1.5"/>'}).join('');
+ var fid=S.face==='idle'?'':'<div class="faceid '+S.face+'"><div class="fi">'+(S.face==='ok'?I.check:I.scanface.replace('width="30" height="30"','width="64" height="64"'))+'</div><b>Face ID</b><small>'+(S.face==='ok'?'Listo':'Mira al celular (simulado)')+'</small></div>';
+ var last=DB.last&&DB.users[DB.last];
+ return '<div class="dk" style="padding-bottom:84px"><svg class="waves" viewBox="0 0 360 440" aria-hidden="true" preserveAspectRatio="xMaxYMin slice">'+arcs+'</svg>'+
+ '<div class="logo"><button class="iconbtn" data-act="towelcome" aria-label="Volver" style="background:rgba(255,255,255,.12);border:0;color:#fff">'+I.back+'</button><span class="mark">'+I.logo+'</span><b>Banco Certus</b></div>'+
+ '<h2 class="lg-hello">'+(last?'¡Hola, '+esc(last.nombres.split(' ')[0])+'!':'Inicia sesión')+'</h2><p class="lg-sub">Ingresa con tu usuario digital.</p>'+
+ '<label class="f" for="usr">Usuario</label><input class="t" id="usr" autocomplete="username" autocapitalize="none" value="'+esc(last?last.usuario:'')+'">'+
+ pwField('pwd','Contraseña','lgp','','Tu contraseña','current-password')+
+ '<p class="err" id="lgerr" '+(S.lg?'':'hidden')+'>'+esc(S.lg)+'</p>'+
+ '<button class="btn lg" data-act="login">Ingresar</button>'+
+ '<button class="lnk" data-act="forgot">¿Olvidaste tu usuario o contraseña?</button>'+
+ '<div class="bio"><button class="biobtn" data-act="face" aria-label="Acceder con rostro o huella">'+I.scanface+'</button><span>Acceder con rostro o huella</span></div>'+
+ '<button class="lnk" data-act="toreg">¿Aún no tienes usuario? Créalo aquí</button>'+fid+'</div>'},
+
+reg:function(){
+ var R=S.reg,st=R.step,h='';
+ if(st===1){
+  h=stepTop(0,12)+'<h2 class="rh">Ingresa tu número de documento</h2><p class="rs">Lo usamos solo para validar tu identidad, según la Ley N.° 29733.</p>'+
+  '<div class="two" style="margin-top:14px"><div><label class="f" for="doc">Tipo</label><select class="t" id="doc" data-in="doc"><option'+(R.doc==='DNI'?' selected':'')+'>DNI</option><option'+(R.doc==='CE'?' selected':'')+'>CE</option></select></div>'+
+  '<div><label class="f" for="dni">N.° de documento</label><input class="t" id="dni" data-in="dni" inputmode="numeric" maxlength="12" autocomplete="off" placeholder="Ej. 12345678" value="'+esc(R.dni)+'"></div></div>'+
+  '<p class="err" id="rerr" '+(R.err?'':'hidden')+'>'+esc(R.err)+'</p><button class="btn gap" data-act="rnext">Continuar</button>';
+ }
+ if(st===2){
+  h=stepTop(0,25)+'<h2 class="rh">Cuéntanos de ti</h2><p class="rs">Así armamos tu perfil de cliente.</p>'+
+  '<label class="f" for="nom">Nombres</label><input class="t" id="nom" data-in="nombres" autocomplete="given-name" value="'+esc(R.nombres)+'">'+
+  '<label class="f" for="ape">Apellidos</label><input class="t" id="ape" data-in="apellidos" autocomplete="family-name" value="'+esc(R.apellidos)+'">'+
+  '<label class="f" for="cel">Celular</label><input class="t" id="cel" data-in="celular" inputmode="numeric" maxlength="9" autocomplete="tel" placeholder="9 dígitos" value="'+esc(R.celular)+'">'+
+  '<label class="f" for="neg">Nombre de tu negocio (opcional)</label><input class="t" id="neg" data-in="negocio" placeholder="Ej. Bodega Los Andes" value="'+esc(R.negocio)+'">'+
+  '<p class="err" id="rerr" '+(R.err?'':'hidden')+'>'+esc(R.err)+'</p><button class="btn gap" data-act="rnext">Continuar</button>';
+ }
+ if(st===3){
+  h=stepTop(0,38);
+  if(R.fs==='tips'){
+   h+='<h2 class="rh">Tómate una fotografía</h2><p class="rs">Por tu seguridad validaremos tu identidad con una foto. Sigue estos consejos.</p>'+
+   '<div class="tip3"><span class="dot">'+I.sun+'</span><div><b>Buena iluminación</b><br><span class="muted">Ubícate en una zona bien iluminada.</span></div></div>'+
+   '<div class="tip3"><span class="dot">'+I.glasses+'</span><div><b>Solo tú puedes aparecer</b><br><span class="muted">Retírate los lentes en caso uses.</span></div></div>'+
+   '<div class="tip3"><span class="dot">'+I.still+'</span><div><b>Evita moverte</b><br><span class="muted">Mira de frente y quédate quieto.</span></div></div>'+
+   '<button class="btn gap" data-act="takephoto">Tomar fotografía</button><button class="lnk dark" data-act="demophoto">Usar foto de ejemplo (demo)</button>';
+  }else{
+   var inner=R.faceUrl?'<img src="'+R.faceUrl+'" alt="Tu fotografía">':I.face;
+   h+='<h2 class="rh" style="text-align:center">'+(R.fs==='ok'?'Identidad verificada':'Validando tu identidad')+'</h2><p class="rs" style="text-align:center">'+(R.fs==='ok'?'Listo, ya puedes continuar.':'Un momento, estamos revisando tu foto.')+'</p>'+
+   '<div class="photo" style="margin-top:16px"><div class="in">'+inner+(R.fs==='check'?'<div class="bar"></div>':'')+'</div></div>'+
+   (R.fs==='ok'?'<p style="text-align:center;color:var(--ok);font-weight:700;display:flex;gap:6px;justify-content:center;align-items:center">'+I.cchk+' Verificación simulada en esta demo</p><button class="btn gap" data-act="rnext">Continuar</button><button class="lnk dark" data-act="retake">Tomar otra foto</button>':'');
+  }
+ }
+ if(st===4){
+  h=stepTop(0,50)+'<h2 class="rh">¿A qué correo te escribimos?</h2><p class="rs">Te enviaremos un código de 6 dígitos para confirmar tu correo.</p>'+
+  '<label class="f" for="em">Correo electrónico</label><input class="t" id="em" data-in="email" type="email" inputmode="email" autocomplete="email" autocapitalize="none" placeholder="nombre@correo.com" value="'+esc(R.email)+'">'+
+  '<p class="err" id="rerr" '+(R.err?'':'hidden')+'>'+esc(R.err)+'</p><button class="btn gap" data-act="rnext">Enviar código</button>';
+ }
+ if(st===5){
+  h=stepTop(0,62)+'<h2 class="rh">Ingresa el código de verificación que se envió al e-mail</h2><p class="rs"><b>'+esc(maskEmail(R.email))+'</b></p>'+
+  '<p class="rs">¿No lo reconoces? <button class="lnk dark" style="display:inline;margin:0" data-act="chmail">Actualiza tu e-mail</button></p>'+
+  '<div class="cboxes" id="cboxes">'+[0,1,2,3,4,5].map(function(i){return '<input class="cbox" data-ci="'+i+'" inputmode="numeric" maxlength="1" autocomplete="'+(i?'off':'one-time-code')+'" aria-label="Dígito '+(i+1)+'">'}).join('')+'</div>'+
+  '<p class="err" id="rerr" '+(R.err?'':'hidden')+'>'+esc(R.err)+'</p>'+
+  '<p class="muted" id="cdwrap" style="text-align:center;margin:6px 0 0"></p>'+
+  '<div class="mail"><span class="dot">'+I.mail+'</span><div><span class="pill">Correo de ejemplo (simulado)</span><div style="margin:6px 0 2px">Tu código de Banco Certus es</div><b class="cd">'+esc(R.code)+'</b><div class="muted" style="font-size:13px;margin-top:4px">En una app real este mensaje llega a tu bandeja de entrada.</div></div></div>';
+ }
+ if(st===6){
+  if(R.sub==='tip'){
+   h='<div style="padding-top:22px;text-align:center"><span class="hero mascot-wrap" id="tipm">'+mascot('t')+'</span><h2 class="rh" style="margin-top:6px">Tu asistente de Certus</h2></div><div class="say" id="tipmsg" aria-live="polite"></div>'+
+   '<button class="btn gap" id="tipbtn" data-act="rnext" disabled>Entendido, crear contraseña</button>';
+  }else{
+   var rs=userRules(R.usuario),okc=rs.filter(function(x){return x.ok}).length;
+   h=stepTop(0,75)+'<h2 class="rh">Crea tu Usuario Digital</h2><p class="rs"><b>Usuario.</b> Este dato será necesario para iniciar sesión. Una vez creado <b>no podrás cambiarlo</b>, evita usar tus datos personales.</p>'+
+   '<label class="f" for="usu">Usuario</label><input class="t" id="usu" data-in="usuario" autocomplete="off" autocapitalize="none" placeholder="Ingresa tu usuario" value="'+esc(R.usuario)+'">'+
+   '<div class="meter" aria-hidden="true"><i id="meter" class="'+(okc===3?'hi':okc===2?'mid':'')+'" style="width:'+(okc/3*100)+'%"></i></div>'+
+   '<ul class="rules" id="rules">'+rulesHtml(rs)+'</ul><button class="btn gap" id="pbtn" data-act="rnext"'+(okc===3?'':' disabled')+'>Continuar</button>';
+  }
+ }
+ if(st===7){
+  var pr=passRules(R.pass,R.pass2),all=pr.every(function(x){return x.ok});
+  h=stepTop(0,88)+'<h2 class="rh">Crea tu contraseña</h2><p class="rs">Úsala para acceder a tus canales digitales. Crea una contraseña distinta a tu usuario.</p>'+
+  pwField('p1','Crea tu nueva contraseña','pass',R.pass,'Ingresa una contraseña segura')+
+  pwField('p2','Confirma tu contraseña','pass2',R.pass2,'Ingrésala nuevamente')+
+  '<ul class="rules" id="rules">'+rulesHtml(pr)+'</ul><p class="err" id="rerr" hidden></p><button class="btn gap" id="pbtn" data-act="rnext"'+(all?'':' disabled')+'>Crear mi cuenta</button>';
+ }
+ if(st===8){
+  h='<div style="text-align:center"><div class="done-ico">'+I.check.replace('width="22" height="22"','width="42" height="42"')+'</div><p class="muted" style="margin:0">Listo</p><h2 class="rh" style="margin-top:4px">Has creado tu Usuario Digital</h2><p class="rs">Úsalo para acceder a tus canales digitales.</p><p class="muted" style="font-size:13px">'+esc(fdate())+'</p></div>'+
+  '<div class="ticket"><span class="muted" style="font-size:13px">Usuario creado:</span><div class="row"><b style="font-size:18px">'+esc(R.usuario)+'</b><button class="btn small alt" data-act="copyuser">'+(S.copied?'Copiado':'Copiar')+'</button></div></div>'+
+  '<p class="rs">Recuerda: por seguridad, no lo compartas con nadie.</p><button class="btn gap" data-act="enter">Ingresar a Banco Certus</button>';
+ }
+ return h},
+
+home:function(){
+ var u=U(),p=profile(),mv=u.movs.slice(-4).reverse();
+ var sign={v:'+',rc:'+',g:'-',pago:'-',tr:'-'};
+ var lab=function(x){return x.t==='tr'?'Transferencia a '+esc(x.d):esc(x.d)};
+ return '<div class="row"><div><small class="muted">'+(u.negocio?esc(u.negocio):'Cuenta personal')+'</small><h2 class="h2s" style="font-size:26px">Hola, '+esc(u.nombres.split(' ')[0])+'</h2></div><button class="btn small alt" data-act="logout">Salir</button></div>'+
+ '<div class="bal"><div class="row"><small>Saldo disponible</small><button class="iconbtn" style="width:32px;height:32px;border-radius:10px" data-act="hide" aria-label="'+(S.hide?'Mostrar':'Ocultar')+' saldo">'+(S.hide?I.eyeoff:I.eye)+'</button></div><b>'+(S.hide?'S/ ••••••':fmt(u.saldo))+'</b></div>'+
+ '<div class="grid4">'+[['transferir','Transferir',I.send],['registrar','Escanear',I.scan],['perfil','Mi perfil',I.user],['aprender','Aprender',I.book]].map(function(x){return '<button class="quick" data-go="'+x[0]+'"><i>'+x[2]+'</i>'+x[1]+'</button>'}).join('')+'</div>'+
+ (u.apertura?'<div class="card"><div class="row"><div><h3>Tu perfil para crédito</h3><p>'+p.all+' de 100 puntos'+(p.apto?' · listo para evaluar':'')+'</p></div><button class="btn small alt" data-go="perfil">Ver</button></div></div>':
+  '<div class="banner"><h3>Ordena tu negocio en 2 minutos</h3><p>Escanea tus boletas y mira cuánto ganas cada semana.</p><button class="btn light" data-go="conoce">Conocer El Consultor</button></div>')+
+ '<div class="card"><h3>Últimos movimientos</h3>'+(mv.length?'<div class="list">'+mv.map(function(x){return '<div class="li"><span>'+lab(x)+'</span><span class="amt '+(sign[x.t]==='+'?'pos':'neg')+'">'+sign[x.t]+' '+fmt(x.m)+'</span></div>'}).join('')+'</div>':'<p>Aún no tienes movimientos. Escanea una boleta o recarga saldo de ejemplo.</p>')+'</div>'+
+ '<button class="btn alt" data-act="recarga">Recargar S/ 500 de saldo (solo demo)</button>'},
+
+conoce:function(){var T=[['Fotografía tu boleta','El asistente lee los productos y los montos por ti.'],['Mira cuánto ganas','Cada semana ves tus ventas, tus gastos y lo que te queda.'],['Separa tu dinero','Una cuenta y una línea solo para el negocio.']];var t=T[S.tut];
+ return top('El Consultor','home')+'<p class="muted" style="margin:0 0 12px">Tu asistente para ordenar el negocio, en palabras simples.</p>'+
+ '<div class="card"><span class="pill">Tutorial · '+(S.tut+1)+' de 3</span><h3 style="margin-top:8px;font-size:19px">'+t[0]+'</h3><p>'+t[1]+'</p><div class="row" style="margin-top:12px"><div class="steps" style="flex:1;margin:0">'+T.map(function(_,i){return '<span class="'+(i<=S.tut?'on':'')+'"></span>'}).join('')+'</div><button class="btn small alt" data-act="tut">'+(S.tut<2?'Siguiente':'Ver de nuevo')+'</button></div></div>'+
+ '<div class="card"><div class="trust"><span class="dot">'+I.check+'</span><div><b>Versión básica gratis</b><br><span class="muted">Sin costos ocultos. Consultor Plus es opcional.</span></div></div>'+
+ '<div class="trust"><span class="dot">'+I.lock+'</span><div><b>Tus datos están protegidos</b><br><span class="muted">Cumplimos la Ley N.° 29733 de protección de datos.</span></div></div>'+
+ '<div class="trust"><span class="dot">'+I.check+'</span><div><b>Sin papeles</b><br><span class="muted">Abre tu cuenta Negocio desde el celular.</span></div></div></div>'+
+ '<button class="btn" data-go="apertura">Abrir mi cuenta Negocio</button><div style="height:8px"></div><button class="btn alt" data-act="chat">Tengo una duda</button>'},
+
+apertura:function(){var u=U();
+ if(u.apertura)return '<div style="text-align:center;padding-top:26px"><div class="done-ico">'+I.check.replace('width="22" height="22"','width="42" height="42"')+'</div><h2 class="rh">Tu cuenta Negocio está lista</h2><p class="muted" style="margin:0 0 18px">Regla de oro: un número, una cuenta, un negocio. Lo personal queda en tu cuenta de siempre.</p></div><div class="card"><h3>Consejo de la asistente</h3><p>Cada vez que registres un gasto, te preguntaré si es del negocio o personal.</p></div><button class="btn" data-go="registrar">Escanear mi primera boleta</button>';
+ return top('Abrir cuenta Negocio','conoce')+'<p class="muted" style="margin:0 0 6px">Ya validamos tu identidad. Solo falta activar tu cuenta del negocio.</p><div class="card"><h3>Cuenta Negocio</h3><p>Una cuenta y una línea exclusivas para tu negocio. Comisión: S/ 2 al mes.</p></div><div class="card row"><div><b>Usar datos de Yape y Plin</b><br><span class="muted">Con tu permiso, para armar tu historial.</span></div><button class="chip'+(u.perm?' on':'')+'" data-act="perm" aria-pressed="'+!!u.perm+'">'+(u.perm?'Sí':'No')+'</button></div><button class="btn" data-act="open">Abrir mi cuenta</button>'},
+
+registrar:function(){
+ var u=U(),sc=S.scan,k=sc.kind,KL={compra:'Compra',gasto:'Gasto o pago',venta:'Venta'};
+ var h=top('Escanear',null)+'<p class="muted" style="margin:0 0 10px">Escanea boletas de venta, compras y gastos para armar tu flujo de caja.</p>'+
+  '<div class="chips">'+Object.keys(KL).map(function(x){return '<button class="chip'+(k===x?' on':'')+'" data-kind="'+x+'" aria-pressed="'+(k===x)+'">'+KL[x]+'</button>'}).join('')+'</div>';
+ if(sc.st==='idle'&&!sc.voice)h+='<div class="big"><button class="bigbtn" data-act="photo">'+I.cam+'Fotografiar</button><button class="bigbtn" data-act="voice">'+I.mic+'Nota de voz</button></div><button class="lnk dark" style="margin-top:0" data-act="demoscan">Usar boleta de ejemplo</button><p class="muted" style="margin:12px 0 0;font-size:14px">¿Sin señal? Se guarda en tu celular y se envía cuando haya. La lectura es simulada en esta demo.</p>';
+ if(sc.st==='scanning')h+='<div class="scan" style="margin:12px 0"><div class="bar"></div><b>Leyendo tu boleta…</b><p class="muted" style="margin:4px 0 0">'+KL[k]+'</p></div>';
+ if(sc.voice)h+='<div class="scan" style="margin:12px 0"><div class="bar"></div><b>Escuchando…</b><p class="muted" style="margin:4px 0 0">"Vendí tres kilos de arroz a quince soles"</p></div>';
+ if(sc.st==='result'){
+  var need=(k==='compra'),ok=(!need||sc.flag!==null)&&Number(sc.monto)>0;
+  h+='<div class="card"><span class="pill ok">Boleta leída</span><h3 style="margin-top:8px">'+esc(sc.comercio)+'</h3><label class="f" for="mon">Monto detectado (puedes corregirlo)</label><input class="t" id="mon" data-sc="monto" inputmode="decimal" value="'+esc(sc.monto)+'"></div>'+
+  (need?'<div class="card"><b>¿Esta compra es del negocio o personal?</b><div class="chips" style="margin-top:10px"><button class="chip'+(sc.flag==='n'?' on':'')+'" data-flag="n">Del negocio</button><button class="chip'+(sc.flag==='p'?' on':'')+'" data-flag="p">Personal</button></div></div>':'')+
+  '<button class="btn" id="savebtn" data-act="save"'+(ok?'':' disabled')+'>Guardar</button><button class="lnk dark" data-act="cancelscan">Cancelar</button>';
+ }
+ var mv=u.movs.filter(function(x){return x.t==='v'||x.t==='g'||x.t==='pago'}).slice(-5).reverse();
+ h+='<div class="card"><h3>Registrado</h3>'+(mv.length?'<div class="list">'+mv.map(function(x){return '<div class="li"><span>'+esc(x.d)+'</span><span class="amt '+(x.t==='v'?'pos':'neg')+'">'+(x.t==='v'?'+ ':'- ')+fmt(x.m)+'</span></div>'}).join('')+'</div>':'<p>Todavía no registras nada. Tu primer escaneo aparecerá aquí.</p>')+'</div>';
+ return h},
+
+flujo:function(){
+ var u=U(),now=new Date(),dow=(now.getDay()+6)%7,mon=new Date(now.getFullYear(),now.getMonth(),now.getDate()-dow).getTime(),vs=[0,0,0,0,0,0,0],V=0,G=0;
+ u.movs.forEach(function(x){var t=new Date(x.date).getTime();if(t<mon)return;var d=Math.min(6,Math.floor((t-mon)/864e5));if(x.t==='v'){vs[d]+=x.m;V+=x.m}else if(x.t==='g'||x.t==='pago'){G+=x.m}});
+ var mx=Math.max(100,Math.max.apply(null,vs)),W=330,H=150,bw=30,gap=(W-7*bw)/8,svg='<svg viewBox="0 0 '+W+' '+(H+34)+'" width="100%" role="img" aria-label="Ventas por día de esta semana">';
+ vs.forEach(function(x,i){var h=Math.round(x/mx*H),xx=gap+i*(bw+gap);svg+='<rect x="'+xx+'" y="'+(H-h+16)+'" width="'+bw+'" height="'+Math.max(h,x?4:2)+'" rx="6" fill="'+(i===dow?'var(--brand)':'var(--primary)')+'" opacity="'+(x?1:.25)+'"/>'+(x?'<text x="'+(xx+bw/2)+'" y="'+(H-h+11)+'" text-anchor="middle" font-size="11" fill="var(--ink)">'+Math.round(x)+'</text>':'')+'<text x="'+(xx+bw/2)+'" y="'+(H+32)+'" text-anchor="middle" font-size="11" fill="var(--muted)">'+DAYS[i]+'</text>'});
+ svg+='</svg>';
+ var empty=!u.movs.some(function(x){return x.t==='v'||x.t==='g'||x.t==='pago'});
+ return top('Tu flujo de caja',null)+'<p class="muted" style="margin:0 0 8px">Esta semana, de lunes a domingo</p>'+(empty?'<div class="card"><h3>Aún no hay datos</h3><p>Escanea tu primera boleta de venta, compra o gasto y aquí verás cuánto te queda.</p><button class="btn gap" data-go="registrar">Escanear una boleta</button></div>':'')+
+ '<div class="card" style="padding:10px 8px">'+svg+'</div><div class="sums"><div class="sum"><small>Ventas</small><b>'+fmt(V)+'</b></div><div class="sum"><small>Compras y gastos</small><b>'+fmt(G)+'</b></div><div class="sum wide"><small>Te queda esta semana</small><b>'+fmt(V-G)+'</b></div></div>'+
+ '<button class="btn alt gap" data-act="excel"><span class="mini">'+I.xls+' Exportar a Excel</span></button><p class="muted" style="font-size:13px;margin:8px 0 0">Descarga tus movimientos y tu resumen para tenerlos en tu computadora.</p>'+
+ '<div class="card" style="margin-top:14px"><h3>Consejo para ti</h3><p>'+(V-G>0?'Te queda '+fmt(V-G)+' esta semana. Si separas una parte para ahorrar apenas cobras, es más fácil cumplir tu meta.':'Anota todas tus ventas y gastos, incluso los pequeños. Así sabrás cuánto gana de verdad tu negocio.')+'</p><button class="btn small alt gap" data-go="aprender">Ver lecciones</button></div>'},
+
+perfil:function(){
+ var u=U(),p=profile(),arc=2*Math.PI*38,off=arc*(1-p.all/100);
+ var names=['Historial de pagos y puntualidad','Nivel de endeudamiento y capacidad de pago','Ingresos y origen del dinero','Nivel de vinculación con el banco'];
+ var txt=[
+  p.pays?'Hiciste '+p.pays+' pago'+(p.pays>1?'s':'')+' desde la app, todos a tiempo. Cada pago puntual suma.':'Aún no hay pagos. Haz una transferencia o paga un servicio para empezar tu historial.',
+  p.nv?'Deuda actual con Certus: S/ 0.00. Te queda el '+Math.round(p.margin*100)+' % de lo que vendes'+(p.nv<3?'. Registra al menos 3 ventas para que cuente completo.':'.'):'Registra tus ventas y gastos para medir cuánto puedes pagar de cuota.',
+  p.nv?'Ingresos registrados: '+fmt(p.V)+' en '+p.nv+' venta'+(p.nv>1?'s':'')+'. Mientras más boletas escanees, más claro es de dónde viene tu dinero.':'Escanea tus boletas de venta para mostrar de dónde viene tu dinero.',
+  'Cuenta creada, rostro y correo verificados'+(u.apertura?', cuenta Negocio abierta':'')+(u.perm?', datos de Yape y Plin permitidos':'')+'. '+(u.apertura&&u.perm&&u.movs.length?'Vas completo.':'Te faltan pasos por completar: abre tu cuenta Negocio, da el permiso y haz tu primer movimiento.')
+ ];
+ var crit=names.map(function(n,i){return '<div class="crit"><div class="hd"><b>'+(i+1)+'. '+n+'</b><span class="amt">'+p.s[i]+'/100</span></div><div class="bar2" role="progressbar" aria-valuenow="'+p.s[i]+'" aria-valuemin="0" aria-valuemax="100" aria-label="'+n+'"><i style="width:'+p.s[i]+'%"></i></div><p>'+txt[i]+'</p></div>'}).join('');
+ return '<div class="row" style="margin-bottom:10px"><div style="display:flex;gap:12px;align-items:center;min-width:0"><span class="avatar">'+esc(u.nombres.charAt(0).toUpperCase())+'</span><div style="min-width:0"><h2 class="h2s" style="font-size:22px;overflow-wrap:anywhere">'+esc(u.nombres.split(' ')[0]+' '+u.apellidos.split(' ')[0])+'</h2><small class="muted">Usuario: '+esc(u.usuario)+'</small></div></div></div>'+
+ '<div class="card row"><svg class="ring" viewBox="0 0 92 92" aria-hidden="true"><circle cx="46" cy="46" r="38" fill="none" stroke="var(--line)" stroke-width="9"/><circle cx="46" cy="46" r="38" fill="none" stroke="'+(p.apto?'var(--ok)':'var(--brand)')+'" stroke-width="9" stroke-linecap="round" stroke-dasharray="'+arc+'" stroke-dashoffset="'+off+'" transform="rotate(-90 46 46)"/><text x="46" y="52" text-anchor="middle" font-size="20" font-weight="700" fill="var(--ink)">'+p.all+'</text></svg><div style="flex:1"><b>'+(p.apto?'Listo para evaluar un crédito':p.all>=40?'Vas bien, sigue así':'Estamos armando tu perfil')+'</b><p style="margin-top:2px">Tu perfil crece con cada movimiento que haces en la app.</p></div></div>'+
+ '<div class="card"><h3>Qué miramos</h3>'+crit+'</div>'+
+ '<div class="card"><h3>Datos verificados</h3><div class="list"><div class="li"><span>'+esc(u.doc)+'</span><span class="amt">'+esc(maskDni(u.dni))+'</span></div><div class="li"><span>Correo</span><span class="amt">'+esc(maskEmail(u.email))+'</span></div><div class="li"><span>Celular</span><span class="amt">'+esc(u.celular.slice(0,3)+' *** '+u.celular.slice(-3))+'</span></div><div class="li"><span>Rostro</span><span class="pill ok">Verificado</span></div></div></div>'+
+ '<button class="btn" data-go="credito">'+(p.apto?'Ver mi microcrédito':'Ver si estoy apto para un crédito')+'</button><p class="muted" style="font-size:13px;margin:10px 0 0">Esta puntuación es una guía de la app. El banco evalúa y decide los créditos.</p>'},
+
+credito:function(){var u=U(),p=profile();
+ var h=top('Mi crédito','perfil')+'<div class="card row"><div><b>Puntos de tu perfil</b><p>'+p.all+' de 100 · se necesitan 70</p></div><span class="pill'+(p.apto?' ok':'')+'">'+(p.apto?'Apto':'Aún no')+'</span></div>';
+ if(!p.apto){var f=[];if(p.s[0]<60)f.push('Haz más pagos o transferencias desde la app.');if(p.s[1]<60)f.push('Registra al menos 3 ventas y tus gastos.');if(p.s[2]<60)f.push('Escanea más boletas de venta.');if(p.s[3]<100)f.push('Abre tu cuenta Negocio y da el permiso de Yape y Plin.');
+  h+='<div class="card"><h3>Qué te falta</h3><ul class="pts">'+f.slice(0,4).map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul></div><button class="btn" disabled>Solicitar microcrédito</button><p class="muted" style="font-size:14px;margin:10px 0 0">Te faltan '+(70-p.all)+' puntos. Sigue usando la app y vuelve a mirar.</p>';}
+ else if(!u.sent)h+='<div class="banner"><h3>Microcrédito hasta S/ 6,000</h3><p>Cuota según tu flujo de caja y cobro automático. Tu historial verificable ya lo respalda.</p><button class="btn light" data-act="apply">Solicitar microcrédito</button></div><p class="muted" style="font-size:14px">El banco evalúa tu solicitud. La asistente no decide créditos.</p>';
+ else h+='<div class="card"><span class="pill ok">Solicitud enviada</span><h3 style="margin-top:8px">El banco está evaluando tu historial</h3><p>Te avisamos aquí mismo cuando haya respuesta.</p></div><button class="btn" data-go="logro">Ver demo: crédito aprobado</button>';
+ return h},
+
+logro:function(){var u=U();
+ return '<div style="text-align:center;padding-top:10px"><div class="done-ico" style="background:color-mix(in srgb,var(--brand) 16%,transparent);color:var(--brand)">'+I.check.replace('width="22" height="22"','width="42" height="42"')+'</div><h2 class="rh">¡Lo lograste, '+esc(u.nombres.split(' ')[0])+'!</h2><p class="muted" style="margin:0 0 6px">Tu primer crédito formal, sin prestamista informal.</p><b style="font-family:var(--serif);font-size:30px">S/ 6,000.00</b><br><span class="pill" style="margin-top:6px">Demo</span></div>'+
+ '<div class="card"><h3>Invita a otra persona con negocio</h3><p style="margin-bottom:10px">Comparte tu código desde la app.</p><div class="row"><span class="code">'+esc(u.usuario.toUpperCase().slice(0,10))+'-CERTUS</span><button class="btn small alt" data-act="copy">'+(S.copied?'Copiado':'Copiar')+'</button></div></div>'+
+ '<div class="card"><h3>¿Recomendarías Banco Certus a otra persona con negocio?</h3><p>0 = nada probable, 10 = muy probable</p><div class="nps">'+[0,1,2,3,4,5,6,7,8,9,10].map(function(n){return '<button data-nps="'+n+'" class="'+(S.nps===n?'on':'')+'">'+n+'</button>'}).join('')+'</div>'+(S.nps!==null?'<p style="margin-top:10px;color:var(--ok);font-weight:600">Gracias por tu respuesta.</p>':'')+'</div>'},
+
+aprender:function(){var u=U(),done=u.edu||[];
+ if(S.lesson!==null){var L=LESSONS[S.lesson];
+  return top(esc(L.t),'aprender')+'<div class="card"><ul class="pts" style="margin-top:0">'+L.pts.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul></div><div class="card"><b>'+L.q+'</b>'+L.o.map(function(o,i){var c=S.pick===null?'':(i===L.ok?' good':(i===S.pick?' wrong':''));return '<button class="opt'+c+'" data-opt="'+i+'"'+(S.pick!==null?' disabled':'')+'>'+esc(o)+'</button>'}).join('')+(S.pick!==null?'<p style="margin-top:10px;font-weight:600;color:'+(S.pick===L.ok?'var(--ok)':'var(--warn)')+'">'+(S.pick===L.ok?'¡Correcto! Lección completada.':'Casi. La respuesta correcta está marcada.')+'</p>':'')+'</div>'+(S.pick!==null?'<button class="btn" data-act="lessonback">Volver a las lecciones</button>':'');
+ }
+ return top('Aprende con Certus',null)+'<div class="card row"><div><b>'+done.length+' de '+LESSONS.length+' lecciones</b><p>Cada lección toma 1 minuto.</p></div><span class="pill'+(done.length===LESSONS.length?' ok':'')+'">'+Math.round(done.length/LESSONS.length*100)+' %</span></div>'+
+ '<div class="card">'+LESSONS.map(function(L,i){var d=done.indexOf(i)>-1;return '<button class="lesson" data-lesson="'+i+'"><span class="dot" style="'+(d?'background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)':'')+'">'+(d?I.check:I.book)+'</span><span style="flex:1"><b>'+L.t+'</b><br><span class="muted" style="font-size:13px">'+(d?'Completada':'Toca para empezar')+'</span></span></button>'}).join('')+'</div>'},
+
+transferir:function(){var u=U(),q=S.tr.q.trim(),ql=q.toLowerCase(),digits=q.replace(/\D/g,'');
+ var list=CONTACTS.filter(function(c){return !q||c[0].toLowerCase().indexOf(ql)>-1||c[1].replace(/\s/g,'').indexOf(digits)>-1&&digits});
+ var newNum=digits.length===9&&!CONTACTS.some(function(c){return c[1].replace(/\s/g,'')===digits});
+ return '<div class="trhead"><button class="iconbtn" data-go="home" aria-label="Volver">'+I.back+'</button><h2>Transferir</h2><button class="iconbtn" data-act="noop" aria-label="Ayuda">'+I.help+'</button></div>'+
+ '<div class="sbar"><label class="sf">'+I.search+'<input id="trq" data-tr="q" placeholder="Busca celular o contacto" value="'+esc(S.tr.q)+'" autocomplete="off" inputmode="search" aria-label="Buscar celular o contacto"></label><button class="qr" data-act="noop" aria-label="Escanear QR">'+I.qr+'</button></div>'+
+ '<div class="favs">'+CONTACTS.slice(0,4).map(function(c,i){return '<button class="fav" data-who="'+i+'"><span class="av" style="background:'+c[2]+'">'+esc(c[0].charAt(0))+'</span>'+esc(c[0].split(' ')[0])+'</button>'}).join('')+'<button class="fav" data-act="noop"><span class="av" style="background:var(--soft);color:var(--accent);border:1.5px dashed var(--accent)">+</span>Agregar favorito</button></div>'+
+ '<div class="card row" style="margin:6px 0"><div><small class="muted">Saldo disponible</small><br><b style="font-size:20px;font-variant-numeric:tabular-nums">'+(S.hide?'S/ ••••••':fmt(u.saldo))+'</b></div><button class="iconbtn" data-act="hide" aria-label="'+(S.hide?'Mostrar':'Ocultar')+' saldo">'+(S.hide?I.eyeoff:I.eye)+'</button></div>'+
+ '<h3 class="h2s" style="font-size:20px;color:var(--ok);margin:14px 0 2px">Tus contactos</h3><p class="muted" style="margin:0 0 4px;font-size:13px">Contactos de ejemplo</p>'+
+ (newNum?'<button class="contact" data-who="n:'+digits+'"><span class="av" style="background:var(--accent)">+</span><span><b>Transferir a '+esc(digits.replace(/(\d{3})(\d{3})(\d{3})/,'$1 $2 $3'))+'</b><small>Número nuevo</small></span></button>':'')+
+ list.map(function(c){var i=CONTACTS.indexOf(c);return '<button class="contact" data-who="'+i+'"><span class="av" style="background:'+c[2]+'">'+esc(c[0].charAt(0))+'</span><span><b>'+esc(c[0])+'</b><small>'+c[1]+'</small></span></button>'}).join('')+
+ (!list.length&&!newNum?'<p class="muted">No encontramos ese contacto. Escribe un celular de 9 dígitos.</p>':'')},
+
+trdetail:function(){var u=U(),w=S.tr.who;
+ return top('Transferir dinero','transferir')+'<div class="card row" style="margin-top:0"><div style="display:flex;gap:12px;align-items:center"><span class="av" style="background:'+w.c+';width:46px;height:46px;border-radius:14px">'+esc(w.n.charAt(0))+'</span><div><b>'+esc(w.n)+'</b><br><small class="muted">'+esc(w.p)+'</small></div></div></div>'+
+ '<label class="f" for="trm">¿Cuánto quieres enviar? (S/)</label><input class="amtin" id="trm" data-tr="monto" inputmode="decimal" placeholder="0.00" value="'+esc(S.tr.monto)+'" autocomplete="off"><p class="muted" style="margin:8px 0 0;font-size:14px">Saldo disponible: '+fmt(u.saldo)+'</p>'+
+ '<p class="err" id="trerr" '+(S.tr.err?'':'hidden')+'>'+esc(S.tr.err)+'</p><button class="btn gap" data-act="trgo">Transferir</button>'},
+
+trok:function(){var o=S.tr.ok;
+ return '<div style="text-align:center;padding-top:20px"><div class="done-ico">'+I.check.replace('width="22" height="22"','width="42" height="42"')+'</div><h2 class="rh">Transferencia exitosa</h2><b style="font-family:var(--serif);font-size:34px">'+fmt(o.m)+'</b><p class="muted" style="margin:6px 0">Enviado a '+esc(o.n)+'</p><p class="muted" style="font-size:13px;margin:0">'+esc(fdate(o.d))+'</p></div><div class="card" style="margin-top:20px"><p>Este pago ya suma a tu historial de pagos en Mi perfil.</p></div><button class="btn" data-go="home">Volver al inicio</button><button class="btn alt gap" data-go="perfil">Ver mi perfil</button>'}
+};
+
+/* ---------- navegación ---------- */
+var AUTHFREE={welcome:1,login:1,reg:1};
+var TAB_OF={home:'home',conoce:'home',apertura:'home',transferir:'home',trdetail:'home',trok:'home',registrar:'registrar',flujo:'flujo',perfil:'perfil',credito:'perfil',logro:'perfil',aprender:'aprender'};
+var STAGE_OF={welcome:0,login:0,reg:2,home:0,conoce:1,apertura:2,registrar:3,flujo:3,perfil:3,credito:3,aprender:3,transferir:3,trdetail:3,trok:3,logro:4};
+function render(){
+ var sc=S.screen,pre=!!AUTHFREE[sc],dark=(sc==='welcome'||sc==='login');
+ $('#phone').toggleAttribute('data-dark',dark);
+ $('#phone').toggleAttribute('data-notabs',pre);
+ $('#phone').toggleAttribute('data-nofab',sc==='welcome'||sc==='reg');
+ $('#tabs').hidden=pre;
+ $('#screen').innerHTML=SCREENS[sc]();
+ $('#screen').scrollTop=0;
+ var tabs=[['home','Inicio',I.home],['registrar','Escanear',I.scan],['flujo','Flujo',I.flow],['perfil','Mi perfil',I.user],['aprender','Aprender',I.book]];
+ $('#tabs').innerHTML=tabs.map(function(t){var on=TAB_OF[sc]===t[0];return '<button class="tab'+(on?' on':'')+'" data-go="'+t[0]+'"'+(on?' aria-current="page"':'')+'>'+t[2]+t[1]+'</button>'}).join('');
+ var si=STAGE_OF[sc];
+ $('#stages').innerHTML=STAGES.map(function(s,i){var c=i===si;return '<div class="stage'+(c?' on':'')+'"><button data-stage="'+i+'" aria-expanded="'+c+'"><span class="num" style="background:var(--s'+(i+1)+')">'+(i+1)+'</span><span class="nm">'+s.n+'</span>'+face(s.lvl,28)+'</button><dl class="detail" style="margin:0"><div><dt>Rosa siente</dt><dd>'+s.feel+'</dd></div><div><dt>Su punto de dolor</dt><dd>'+s.pain+'</dd></div><div><dt>Cómo lo resuelve la app</dt><dd>'+s.sol+'</dd></div></dl></div>'}).join('');
+ afterRender();
+}
+function toast(t){var e=$('#toast');e.textContent=t;e.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){e.classList.remove('show')},3200)}
+function go(s){
+ if(!AUTHFREE[s]&&!S.user){toast('Primero crea tu usuario o inicia sesión.');S.screen='welcome';render();return}
+ clearInterval(timerI);S.screen=s;
+ if(s==='transferir'){S.tr={q:'',who:null,monto:'',err:''}}
+ if(s==='registrar'){S.scan={kind:'compra',st:'idle',flag:null,monto:'',comercio:'',voice:false}}
+ if(s==='aprender'){S.lesson=null;S.pick=null}
+ if(s==='reg'){S.reg=freshReg()}
+ if(s==='login'){S.lg='';S.face='idle'}
+ render();updateChatContext();
+}
+function afterRender(){
+ var R=S.reg;
+ if(S.screen==='reg'&&R.step===5)startTimer();
+ if(S.screen==='reg'&&R.step===6&&R.sub==='tip')runTip();
+ if(S.screen==='reg'&&R.step===3&&R.fs==='check')setTimeout(function(){if(S.screen==='reg'&&S.reg.fs==='check'){S.reg.fs='ok';render()}},1700);
+}
+
+/* ---------- registro ---------- */
+function setErr(m){S.reg.err=m;var e=$('#rerr');if(e){e.textContent=m;e.hidden=!m}}
+function newCode(){var c='';for(var i=0;i<6;i++)c+=Math.floor(Math.random()*10);return c}
+function startTimer(){S.reg.left=60;clearInterval(timerI);var paint=function(){var w=$('#cdwrap');if(!w)return;w.innerHTML=S.reg.left>0?'Solicitar nuevo código en <b>'+S.reg.left+' segundos</b>':'<button class="lnk dark" style="margin:0" data-act="resend">Solicitar nuevo código</button>'};paint();timerI=setInterval(function(){if(S.screen!=='reg'||S.reg.step!==5){clearInterval(timerI);return}if(S.reg.left>0)S.reg.left--;paint();if(S.reg.left<=0)clearInterval(timerI)},1000);setTimeout(function(){var f=document.querySelector('[data-ci="0"]');if(f)f.focus({preventScroll:true})},60)}
+async function regNext(){
+ var R=S.reg,st=R.step;
+ if(st===1){
+  var d=R.dni.trim();
+  if(R.doc==='DNI'&&!/^\d{8}$/.test(d))return setErr('El DNI debe tener 8 números.');
+  if(R.doc==='CE'&&!/^[A-Za-z0-9]{9,12}$/.test(d))return setErr('El CE debe tener entre 9 y 12 caracteres.');
+  if(Object.keys(DB.users).some(function(k){return DB.users[k].dni===d}))return setErr('Este documento ya tiene un usuario. Inicia sesión.');
+  if(cloud()){try{if(await CFB.dniExists(d))return setErr('Este documento ya tiene un usuario. Inicia sesión.')}catch(e){}}
+  R.dni=d;R.err='';R.step=2;
+ }else if(st===2){
+  if(R.nombres.trim().length<2||R.apellidos.trim().length<2)return setErr('Escribe tus nombres y apellidos.');
+  if(!/^9\d{8}$/.test(R.celular.trim()))return setErr('El celular debe tener 9 números y empezar con 9.');
+  R.err='';R.step=3;R.fs='tips';
+ }else if(st===3){R.step=4;R.err=''}
+ else if(st===4){
+  var em=R.email.trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em))return setErr('Escribe un correo válido.');
+  R.email=em;R.code=newCode();R.err='';R.step=5;
+ }else if(st===6){
+  if(R.sub!=='tip'){if(!userRules(R.usuario).every(function(x){return x.ok}))return;
+   if(cloud()){var tk=false;try{tk=await CFB.usernameExists(R.usuario.toLowerCase())}catch(e){}if(tk){toast('Ese usuario ya existe, prueba otro.');return}}
+   R.sub='tip';R.step=6}
+  else{R.sub='';R.step=7;R.err=''}
+ }else if(st===7){createAccount();return}
+ render();
+}
+function regPrev(){
+ var R=S.reg;clearInterval(timerI);
+ if(R.step===1){go('welcome');return}
+ if(R.step===6&&R.sub==='tip'){R.sub='';render();return}
+ if(R.step===5){R.step=4}else if(R.step===4){R.step=3;R.fs='tips'}else if(R.step===7){R.step=6;R.sub=''}else R.step--;
+ R.err='';render();
+}
+async function createAccount(){
+ var R=S.reg,pr=passRules(R.pass,R.pass2);if(!pr.every(function(x){return x.ok}))return;
+ var key=R.usuario.toLowerCase();if(DB.users[key]){R.step=6;R.sub='';render();return}
+ var rec={usuario:R.usuario,doc:R.doc,dni:R.dni,nombres:R.nombres.trim(),apellidos:R.apellidos.trim(),celular:R.celular.trim(),negocio:R.negocio.trim(),email:R.email,face:true,created:new Date().toISOString(),saldo:0,movs:[],apertura:false,perm:true,sent:false,edu:[]};
+ if(cloud()){
+  var b=$('#pbtn');if(b){b.disabled=true;b.textContent='Creando tu cuenta...'}
+  try{S.uid=await CFB.register(key,R.pass,rec)}
+  catch(e){var c=e&&e.code||'';var m=c==='auth/email-already-in-use'?'Ese usuario ya existe, prueba otro.':c==='auth/network-request-failed'?'Sin conexión. Revisa tu internet e inténtalo de nuevo.':c==='permission-denied'?'No se pudo crear la cuenta. Si tu documento ya está registrado, inicia sesión.':c==='auth/operation-not-allowed'?'La cuenta no se pudo crear. Revisa que Authentication esté activado en Firebase.':'No se pudo crear la cuenta. Inténtalo de nuevo.';
+   if(b){b.disabled=false;b.textContent='Crear mi cuenta'}toast(m);return}
+  DB.users[key]=rec;DB.last=key;
+ }else{
+  var salt=rid(16),hash=await hashPw(R.pass,salt);rec.salt=salt;rec.hash=hash;
+  DB.users[key]=rec;DB.last=key;save();
+ }
+ R.pass='';R.pass2='';R.step=8;S.copied=false;
+ if(R.faceUrl){try{URL.revokeObjectURL(R.faceUrl)}catch(e){}R.faceUrl=''}
+ render();
+}
+function liveUser(){var rs=userRules(S.reg.usuario),okc=rs.filter(function(x){return x.ok}).length;var r=$('#rules');if(r)r.innerHTML=rulesHtml(rs);var m=$('#meter');if(m){m.style.width=(okc/3*100)+'%';m.className=okc===3?'hi':okc===2?'mid':''}var b=$('#pbtn');if(b)b.disabled=okc!==3}
+function livePass(){var pr=passRules(S.reg.pass,S.reg.pass2);var r=$('#rules');if(r)r.innerHTML=rulesHtml(pr);var b=$('#pbtn');if(b)b.disabled=!pr.every(function(x){return x.ok})}
+
+/* ---------- login ---------- */
+async function doLogin(){
+ var u=($('#usr')||{}).value||'',p=($('#pwd')||{}).value||'',er=$('#lgerr');
+ var fail=function(m){S.lg=m;er.textContent=m;er.hidden=false};
+ if(!u.trim()||!p)return fail('Escribe tu usuario y tu contraseña.');
+ var key=u.trim().toLowerCase();
+ if(cloud()){
+  try{var r=await CFB.login(key,p);S.uid=r.uid;DB.users[key]=normUser(r.data);S.user=key;DB.last=key;go('home')}
+  catch(e){var c=e&&e.code||'';return fail(c==='auth/network-request-failed'?'Sin conexión. Revisa tu internet.':c==='auth/too-many-requests'?'Demasiados intentos. Espera unos minutos.':c==='no-profile'?'Tu cuenta no tiene perfil. Vuelve a registrarte.':'Usuario o contraseña incorrectos. Si aún no tienes usuario, créalo.')}
+  return;
+ }
+ var rec=DB.users[key];
+ if(!rec)return fail('Usuario o contraseña incorrectos. Si aún no tienes usuario, créalo.');
+ var h=await hashPw(p,rec.salt);if(h!==rec.hash)return fail('Usuario o contraseña incorrectos.');
+ S.user=key;DB.last=S.user;save();go('home');
+}
+function normUser(d){d=d||{};d.movs=d.movs||[];d.edu=d.edu||[];d.saldo=d.saldo||0;return d}
+
+/* ---------- asistente con IA generativa ---------- */
+var sampleFn=null,dlFn=null,busy=false,turns=[],hintT,raf=0,px=0,py=0,typeT;
+var msgs=[{f:'bot',t:'Hola, soy la asistente de Certus Banco. Pregúntame lo que quieras sobre la app: cómo crear tu usuario, costos, seguridad, tu perfil o cómo registrar tus ventas.'}];
+var SUGG_PRE=['¿Cómo creo mi usuario?','¿Qué datos me piden?','¿Es seguro?','¿Cuánto cuesta?'];
+var SUGG_IN=['¿Cómo mejoro mi perfil?','¿Cómo exporto a Excel?','¿Cómo registro una venta?','¿Cuánto cuesta?','¿Y si no tengo señal?'];
+function rules(){var u=U(),n=u?u.nombres.split(' ')[0]:null;
+ return 'Eres la asistente virtual de la app Certus Banco, de un banco peruano. Hablas con '+(n?'un cliente llamado '+n:'una persona que aún no entra a la app')+', que tiene un pequeño negocio. Responde siempre en español, con palabras simples y amables, en máximo 3 oraciones cortas, sin términos técnicos. Usa solo estos datos y no inventes otros montos, tasas ni plazos: '+
+ 'Para crear su usuario digital la persona escribe su DNI, sus datos, se toma una foto, confirma su correo con un código de 6 dígitos, crea un usuario (de 6 a 15 caracteres, con letras y números) y una contraseña (de 8 a 20 caracteres, con mayúscula, minúscula y número). El usuario no se puede cambiar después. '+
+ 'La app registra ventas, compras y gastos al escanear boletas o con una nota de voz, en menos de 2 minutos, y arma el flujo de caja semanal, que se puede exportar a Excel desde la pantalla Flujo. '+
+ 'En Mi perfil se miran 4 cosas que se construyen con el uso: historial de pagos y puntualidad, nivel de endeudamiento y capacidad de pago, ingresos y origen del dinero, y vinculación con el banco. Con 70 puntos o más se puede pedir la evaluación de un microcrédito. El banco evalúa y decide los créditos, tú no, y nunca prometas que será aprobado. '+
+ 'La versión básica es gratis. Consultor Plus es opcional y cuesta S/ 9.90 al mes. La cuenta Negocio tiene una comisión de S/ 2 al mes. Si no hay señal, el registro se guarda y se envía cuando haya. Los datos se protegen según la Ley N.° 29733. Con permiso se usan datos de Yape y Plin para armar el historial. Desde Transferir se envía dinero a un contacto o a un celular de 9 dígitos, y cada pago suma al perfil. La sección Aprender tiene lecciones cortas de educación financiera. '+
+ 'Si preguntan algo que no tiene que ver con la app, di con amabilidad que solo puedes ayudar con Certus Banco. Nunca pidas ni repitas datos personales como DNI, usuario, claves o códigos, y recuerda siempre que no deben compartirlos con nadie.'}
+function mascot(u){
+ return '<svg class="mascot" data-state="idle" viewBox="0 0 120 134" role="img" aria-label="Asistente de Certus Banco">'+
+ '<defs><linearGradient id="h'+u+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6AA3FF"/><stop offset="1" stop-color="#2347C8"/></linearGradient>'+
+ '<linearGradient id="b'+u+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A7BFF"/><stop offset="1" stop-color="#0A2A55"/></linearGradient>'+
+ '<linearGradient id="s'+u+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#16398C"/><stop offset="1" stop-color="#0B1F4D"/></linearGradient></defs>'+
+ '<line x1="60" y1="18" x2="60" y2="9" stroke="#9BBEFF" stroke-width="3" stroke-linecap="round"/><circle class="led" cx="60" cy="6" r="5" fill="#2DD4BF"/>'+
+ '<rect x="30" y="86" width="60" height="42" rx="21" fill="url(#b'+u+')"/>'+
+ '<rect x="51" y="108" width="5" height="9" rx="2" fill="#fff"/><rect x="59" y="102" width="5" height="15" rx="2" fill="#fff"/><rect x="67" y="96" width="5" height="21" rx="2" fill="#5EEAD4"/>'+
+ '<circle cx="25" cy="108" r="8" fill="#4F8BFF"/>'+
+ '<g class="arm"><line x1="92" y1="98" x2="106" y2="88" stroke="#4F8BFF" stroke-width="9" stroke-linecap="round"/><circle cx="108" cy="86" r="8" fill="#6AA3FF"/></g>'+
+ '<circle cx="14" cy="50" r="7" fill="#1B3A9C"/><circle cx="106" cy="50" r="7" fill="#1B3A9C"/>'+
+ '<rect x="18" y="18" width="84" height="66" rx="28" fill="url(#h'+u+')"/><ellipse cx="42" cy="23" rx="13" ry="2.6" fill="#fff" opacity=".4"/>'+
+ '<rect x="26" y="27" width="68" height="48" rx="21" fill="url(#s'+u+')"/>'+
+ '<g class="look"><g class="eyes"><g class="eyeball"><ellipse cx="47" cy="47" rx="7" ry="9" fill="#5EEAD4"/><circle cx="45" cy="43" r="2.4" fill="#fff"/></g><g class="eyeball"><ellipse cx="73" cy="47" rx="7" ry="9" fill="#5EEAD4"/><circle cx="71" cy="43" r="2.4" fill="#fff"/></g></g></g>'+
+ '<ellipse cx="36" cy="62" rx="5" ry="3" fill="#FF8FB1" opacity=".55"/><ellipse cx="84" cy="62" rx="5" ry="3" fill="#FF8FB1" opacity=".55"/>'+
+ '<path class="m-idle" d="M52 60 Q60 67 68 60" fill="none" stroke="#5EEAD4" stroke-width="3" stroke-linecap="round"/>'+
+ '<ellipse class="m-talk" cx="60" cy="63" rx="5" ry="4" fill="#5EEAD4"/>'+
+ '<circle class="m-think" cx="60" cy="63" r="3" fill="none" stroke="#5EEAD4" stroke-width="2.5"/>'+
+ '<path class="m-happy" d="M49 58 Q60 74 71 58 Z" fill="#5EEAD4"/>'+
+ '</svg>';
+}
+$('#fabm').innerHTML=mascot('a');$('#chatm').innerHTML=mascot('b');
+function setState(s){document.querySelectorAll('.mascot').forEach(function(m){m.setAttribute('data-state',s)})}
+function wave(){document.querySelectorAll('.mascot').forEach(function(m){m.classList.remove('wave');void m.getBoundingClientRect();m.classList.add('wave');setTimeout(function(){m.classList.remove('wave')},1800)})}
+function hint(){var h=$('#hint');h.classList.add('show');clearTimeout(hintT);hintT=setTimeout(function(){h.classList.remove('show')},6000)}
+document.addEventListener('pointermove',function(e){px=e.clientX;py=e.clientY;if(raf)return;raf=requestAnimationFrame(function(){raf=0;document.querySelectorAll('.mascot').forEach(function(m){var r=m.getBoundingClientRect();if(!r.width)return;var dx=px-(r.left+r.width/2),dy=py-(r.top+r.height*.38),d=Math.sqrt(dx*dx+dy*dy)||1,k=Math.min(1,d/160);m.style.setProperty('--lx',(dx/d*3*k).toFixed(2));m.style.setProperty('--ly',(dy/d*3*k).toFixed(2))})})});
+function updateNote(){$('#status').textContent=sampleFn?'Asistente con IA generativa':'Asistente virtual';$('#ainote').textContent=sampleFn?'Respuestas con IA generativa: pueden tener errores. Los créditos los decide el banco.':'Respuestas rápidas de ejemplo.'}
+updateNote();
+try{if(window.claude&&window.claude.use){
+ window.claude.use('sample').then(function(s){if(s){sampleFn=s;updateNote()}}).catch(function(){});
+ window.claude.use('downloads').then(function(d){if(d)dlFn=d}).catch(function(){});
+}}catch(x){}
+function updateChatContext(){}
+function drawChat(){
+ $('#msgs').innerHTML=msgs.map(function(m){return m.typing?'<div class="m bot typing" aria-label="Escribiendo"><i></i><i></i><i></i></div>':'<div class="m '+m.f+'">'+esc(m.t)+'</div>'}).join('');
+ $('#msgs').scrollTop=$('#msgs').scrollHeight;
+ $('#sugg').innerHTML=(S.user?SUGG_IN:SUGG_PRE).map(function(s){return '<button type="button" class="chip" data-q="'+esc(s)+'">'+esc(s)+'</button>'}).join('');
+}
+function answer(q){
+ var s=q.toLowerCase();
+ if(/crear|registr.*usuario|usuario.*crear|c[oó]mo creo|cuenta nueva|ser cliente/.test(s)&&!S.user)return 'Toca "Crear usuario y contraseña", escribe tu DNI y tus datos, tómate una foto, confirma tu correo con el código de 6 dígitos y crea tu usuario y tu contraseña. Son unos 3 minutos.';
+ if(/qu[eé] datos|datos me piden|piden/.test(s))return 'Te pedimos tu DNI, tus nombres y apellidos, tu celular, una foto de tu rostro y tu correo. El nombre de tu negocio es opcional.';
+ if(/perfil|mejor|apto|puntos|score/.test(s))return 'Tu perfil mira 4 cosas: tus pagos a tiempo, cuánto puedes pagar, de dónde viene tu dinero y qué tan vinculado estás con el banco. Mejora cuando escaneas boletas, haces pagos y completas tu cuenta Negocio.';
+ if(/excel|exportar|descargar|computadora/.test(s))return 'En la pantalla Flujo toca "Exportar a Excel". Descargas tus movimientos y un resumen para tenerlos en tu computadora.';
+ if(/transfer|enviar dinero|yape|plin/.test(s))return 'En Inicio toca Transferir, busca a tu contacto o escribe su celular de 9 dígitos, pon el monto y confirma. Cada pago suma a tu perfil. Con tu permiso también usamos datos de Yape y Plin para tu historial.';
+ if(/olvid|contrase|clave|usuario|ingres|huella|rostro|face/.test(s))return 'Para entrar usa tu usuario y contraseña, o tu rostro o huella. Si olvidaste tus datos, toca "¿Olvidaste tu usuario o contraseña?". Nunca compartas tu usuario ni tu clave con nadie.';
+ if(/cuesta|precio|gratis|costo|pagar|cobr|comisi/.test(s))return 'Registrar tus ventas con la versión básica del Consultor es gratis. Consultor Plus es opcional y cuesta S/ 9.90 al mes. La cuenta Negocio tiene una comisión de S/ 2 al mes. No hay otros costos ocultos.';
+ if(/segur|prote|confi/.test(s))return 'Tus datos están protegidos según la Ley N.° 29733. La asistente solo usa tus registros y normas verificadas, y no decide créditos: eso lo hace el banco. Nunca compartas tu usuario ni tu clave.';
+ if(/papel|document|requisit|dni|selfie/.test(s))return 'No necesitas papeles. Para crear tu usuario usamos tu DNI y una foto desde el celular.';
+ if(/se[ñn]al|internet|conexi/.test(s))return 'Si no tienes señal, tu registro se guarda en el celular y se envía cuando vuelva la conexión.';
+ if(/cr[eé]dito|pr[eé]stamo|plata|prestamista/.test(s))return 'Cuando tu perfil llegue a 70 puntos puedes pedir que el banco evalúe un microcrédito, con cuota según tu flujo de caja. El banco decide.';
+ if(/venta|boleta|escane|registro|registrar/.test(s))return 'Ve a Escanear, elige si es venta, compra o gasto, y fotografía la boleta o usa una nota de voz. Revisa el monto y toca Guardar. Toma menos de 2 minutos.';
+ if(/ahorr/.test(s))return 'Tu flujo de caja semanal te muestra cuánto te queda. Separa una parte apenas cobres. Mira la lección "Ahorra cada semana" en Aprender.';
+ if(/gracias/.test(s))return 'De nada. Aquí estaré si tienes otra duda.';
+ return 'Puedo ayudarte con tu usuario, costos, seguridad, tu perfil, Excel, transferencias y crédito. ¿Sobre cuál quieres saber?';
+}
+function finish(){busy=false;setState('happy');setTimeout(function(){if(!busy)setState('idle')},1500)}
+function typeInto(text,cb,done){var i=0;setState('talk');clearInterval(typeT);typeT=setInterval(function(){i+=2;cb(text.slice(0,i));if(i>=text.length){clearInterval(typeT);done&&done()}},18)}
+function dropMsg(o){var i=msgs.indexOf(o);if(i>-1)msgs.splice(i,1)}
+function ask(q){
+ q=q.trim();if(!q||busy)return;busy=true;
+ msgs.push({f:'me',t:q});var typing={typing:true,f:'bot'};msgs.push(typing);drawChat();setState('think');
+ var fallback=function(){dropMsg(typing);var m={f:'bot',t:''};msgs.push(m);typeInto(answer(q),function(t){m.t=t;drawChat()},finish)};
+ if(!sampleFn){setTimeout(fallback,700);return}
+ var bot=null;turns.push({role:'user',content:q});
+ var ctl=new AbortController();
+ sampleFn([{role:'user',content:rules()}].concat(turns.slice(-8)),{modelTier:'quick',cache:false,signal:ctl.signal,onText:function(u){if(!bot){dropMsg(typing);bot={f:'bot',t:''};msgs.push(bot);setState('talk')}bot.t=u.text;drawChat()}})
+ .then(function(r){turns.push({role:'assistant',content:r.text});finish()})
+ .catch(function(e){turns.pop();var c=e&&e.code;
+   if(c==='not_granted'||c==='sampling_disabled'||c==='not_declared'||c==='capability_disabled'||c==='capability_removed'){sampleFn=null;updateNote()}
+   if(bot&&e&&e.text){bot.t=e.text;drawChat();finish()}else{dropMsg(bot);fallback()}})
+}
+function setChat(o){chatOpen=o;$('#chat').classList.toggle('open',o);$('#fab').hidden=o;
+ if(o){drawChat();wave();setState('happy');setTimeout(function(){if(!busy)setState('idle')},1200);setTimeout(function(){$('#cin').focus({preventScroll:true})},320)}else{setState('idle')}}
+setTimeout(hint,1200);
+/* mensaje de la asistente al crear el usuario */
+function runTip(){
+ var el=$('#tipmsg'),btn=$('#tipbtn'),n=S.reg.nombres.trim().split(' ')[0],tok=S.reg;
+ var fb='Recuerda, '+n+': por seguridad, no compartas tu usuario ni tu contraseña con nadie, ni siquiera con alguien que diga ser del banco.';
+ var done=function(){setState('happy');setTimeout(function(){setState('idle')},1400);var b=$('#tipbtn');if(b)b.disabled=false};
+ var write=function(t){var e=$('#tipmsg');if(e)e.textContent=t};
+ write('');setState('think');
+ if(!sampleFn){setTimeout(function(){typeInto(fb,write,done)},600);return}
+ var got=false;
+ sampleFn('Eres la asistente virtual de Certus Banco. El cliente '+n+' acaba de crear su usuario digital en la app. Dile, en 2 oraciones cortas, amables y en palabras simples, que por seguridad no debe compartir su usuario ni su contraseña con nadie, ni con personal del banco. Empieza con "Recuerda, '+n+':". No menciones el usuario que eligió.',{modelTier:'quick',cache:false,onText:function(u){got=true;if(S.reg===tok&&S.screen==='reg'){setState('talk');write(u.text)}}})
+ .then(function(){done()}).catch(function(e){var c=e&&e.code;if(c==='not_granted'||c==='sampling_disabled'||c==='not_declared'||c==='capability_disabled'||c==='capability_removed'){sampleFn=null;updateNote()}if(!got)typeInto(fb,write,done);else done()});
+}
+
+/* ---------- Excel ---------- */
+async function exportXlsx(){
+ var u=U();if(!u)return;
+ if(!window.XLSX){toast('No se pudo preparar el Excel en este momento.');return}
+ var dl=dlFn;if(!dl){try{dl=await window.claude.use('downloads')}catch(e){}}
+ if(!dl){toast('La descarga no está disponible en esta vista.');return}
+ var TL={v:'Venta',g:'Compra o gasto',pago:'Pago de servicio',tr:'Transferencia enviada',rc:'Recarga de ejemplo'};
+ var SER={v:'B001',g:'C001',pago:'P001',tr:'T001',rc:'R001'},cnt={};
+ var dd=function(d){d=new Date(d);var z=function(k){return String(k).padStart(2,'0')};return z(d.getDate())+'/'+z(d.getMonth()+1)+'/'+d.getFullYear()};
+ var asc=u.movs.slice().sort(function(a,b){return a.date<b.date?-1:1});
+ var rows=[['Tipo Doc.','Numero','Tipo Doc.Ident.','N° Doc.Ident.','Razón Social','F.Emisión','Moneda','Monto','Estado Doc.']];
+ var body=asc.map(function(x){var t=x.t;cnt[t]=(cnt[t]||0)+1;
+  return [TL[t]||t,(SER[t]||'X001')+' - '+String(cnt[t]).padStart(8,'0'),'-','-',String(x.d||'').toUpperCase(),dd(x.date),'PEN',Math.round(x.m*100)/100,'CONFORME']});
+ body.reverse().forEach(function(r){rows.push(r)});
+ var wsM=XLSX.utils.aoa_to_sheet(rows);wsM['!cols']=[{wch:22},{wch:18},{wch:15},{wch:15},{wch:36},{wch:12},{wch:8},{wch:12},{wch:13}];
+ wsM['!autofilter']={ref:'A1:I'+Math.max(rows.length,2)};
+ var V=sumT('v'),G=sumT('g'),P=sumT('pago'),T=sumT('tr');
+ var n=function(v,f){return {t:'n',v:Math.round(v*100)/100,f:f}};
+ var last=Math.max(rows.length,2);
+ var rng=function(c){return "'Consulta de Documentos'!"+c+'2:'+c+last};
+ var wsR=XLSX.utils.aoa_to_sheet([['Flujo de caja · '+(u.negocio||u.nombres+' '+u.apellidos)],['Generado el '+fdate()],[],['Concepto','Monto (S/)'],
+  ['Ventas',n(V,'SUMIF('+rng('A')+',"Venta",'+rng('H')+')')],
+  ['Compras y gastos',n(G,'SUMIF('+rng('A')+',"Compra o gasto",'+rng('H')+')')],
+  ['Pagos de servicios',n(P,'SUMIF('+rng('A')+',"Pago de servicio",'+rng('H')+')')],
+  ['Transferencias enviadas',n(T,'SUMIF('+rng('A')+',"Transferencia enviada",'+rng('H')+')')],
+  ['Te queda (ventas − compras, gastos y pagos)',n(V-G-P,'B5-B6-B7')],
+  ['Margen sobre ventas',{t:'n',v:V>0?Math.round((V-G-P)/V*1000)/1000:0,f:'IF(B5>0,B9/B5,0)',z:'0.0%'}],
+  [],['Las compras marcadas como personales no se cuentan como gasto del negocio.']]);
+ wsR['!cols']=[{wch:44},{wch:16}];
+ var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,wsR,'Resumen');XLSX.utils.book_append_sheet(wb,wsM,'Consulta de Documentos');
+ try{
+  var out=XLSX.write(wb,{type:'array',bookType:'xlsx'});
+  var d=new Date(),z=function(k){return String(k).padStart(2,'0')};
+  await dl.save({filename:'Flujo_de_caja_Certus_'+d.getFullYear()+z(d.getMonth()+1)+z(d.getDate())+'.xlsx',data:new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})});
+  toast('Excel listo.');
+ }catch(e){if(!e||e.code!=='declined')toast('No se pudo descargar el Excel.')}
+}
+
+/* ---------- boletas simuladas ---------- */
+function fakeScan(kind){
+ var S1={compra:[['Mayorista San Martín',30.5+Math.floor(Math.random()*60)],['Distribuidora Andina',45+Math.floor(Math.random()*80)]],gasto:[['Recibo de luz',58+Math.floor(Math.random()*30)],['Recibo de agua',32+Math.floor(Math.random()*20)]],venta:[['Boleta de venta del día',85+Math.floor(Math.random()*160)],['Venta a cliente frecuente',40+Math.floor(Math.random()*70)]]};
+ var p=S1[kind][Math.floor(Math.random()*2)];return {comercio:p[0],monto:String(p[1].toFixed(2))};
+}
+function startScan(){
+ var k=S.scan.kind;S.scan.st='scanning';S.scan.flag=null;render();
+ setTimeout(function(){if(S.screen==='registrar'&&S.scan.st==='scanning'){var f=fakeScan(k);S.scan.comercio=f.comercio;S.scan.monto=f.monto;S.scan.st='result';render()}},1400);
+}
+
+/* ---------- eventos ---------- */
+document.addEventListener('click',function(e){
+ var t=e.target.closest('[data-go],[data-act],[data-stage],[data-flag],[data-nps],[data-q],[data-eye],[data-kind],[data-who],[data-lesson],[data-opt]');if(!t)return;
+ var D=t.dataset;
+ if(D.go){go(D.go);return}
+ if(D.eye){var inp=document.getElementById(D.eye);if(inp){var show=inp.type==='password';inp.type=show?'text':'password';t.innerHTML=show?I.eyeoff:I.eye;t.setAttribute('aria-pressed',show);t.setAttribute('aria-label',show?'Ocultar contraseña':'Mostrar contraseña')}return}
+ if(D.stage){var i=+D.stage;
+  if(i===0){go(S.user?'home':'welcome')}
+  else if(i===2&&!S.user){go('reg')}
+  else if(!S.user){toast('Primero crea tu usuario o inicia sesión en el celular.')}
+  else{S.tut=0;go(['home','conoce','apertura','registrar','logro'][i])}
+  return}
+ if(D.kind){S.scan.kind=D.kind;render();return}
+ if(D.flag){S.scan.flag=D.flag;render();return}
+ if(D.nps){S.nps=+D.nps;render();return}
+ if(D.q){ask(D.q);return}
+ if(D.who!==undefined){var w=D.who,c;if(w.indexOf('n:')===0){var dd=w.slice(2);c={n:'Celular '+dd.replace(/(\d{3})(\d{3})(\d{3})/,'$1 $2 $3'),p:'Número nuevo',c:'#2F6BFF'}}else{var k=CONTACTS[+w];c={n:k[0],p:k[1],c:k[2]}}
+  S.tr.who=c;S.tr.monto='';S.tr.err='';go('trdetail');return}
+ if(D.lesson){S.lesson=+D.lesson;S.pick=null;render();return}
+ if(D.opt!==undefined){var L=LESSONS[S.lesson],pk=+D.opt;S.pick=pk;if(pk===L.ok){var u=U();u.edu=u.edu||[];if(u.edu.indexOf(S.lesson)<0){u.edu.push(S.lesson);save()}}render();return}
+ var a=D.act,R=S.reg;
+ if(a==='noop')toast('Esta opción no es parte del prototipo.');
+ if(a==='towelcome')go('welcome');
+ if(a==='tologin')go('login');
+ if(a==='toreg')go('reg');
+ if(a==='login')doLogin();
+ if(a==='forgot')toast('Te enviaríamos un código a tu correo registrado. Aquí es solo una demostración.');
+ if(a==='logout'){if(cloud())CFB.logout().catch(function(){});S.user=null;S.uid=null;go('welcome')}
+ if(a==='face'&&cloud()){toast('Entra con tu usuario y contraseña. El acceso con rostro necesita la app instalada en el celular.');return}
+ if(a==='face'){var l=DB.last&&DB.users[DB.last];if(!l){toast('Primero crea tu usuario. Luego podrás entrar con tu rostro.');return}S.face='scan';render();setTimeout(function(){S.face='ok';render();setTimeout(function(){S.face='idle';S.user=DB.last;go('home')},800)},1500)}
+ if(a==='rnext')regNext();
+ if(a==='rprev')regPrev();
+ if(a==='takephoto')$('#fotoin').click();
+ if(a==='demophoto'){R.faceUrl='';R.fs='check';render()}
+ if(a==='retake'){R.fs='tips';R.faceUrl='';render()}
+ if(a==='chmail'){clearInterval(timerI);R.step=4;R.err='';render()}
+ if(a==='resend'){R.code=newCode();S.reg.err='';render()}
+ if(a==='copyuser'){S.copied=true;render();try{navigator.clipboard.writeText(R.usuario).catch(function(){})}catch(x){}}
+ if(a==='enter'){S.user=R.usuario.toLowerCase();S.reg=freshReg();go('home')}
+ if(a==='chat')setChat(true);
+ if(a==='hide'){S.hide=!S.hide;render()}
+ if(a==='recarga'){addMov({t:'rc',d:'Recarga de saldo (demo)',m:500});U().saldo+=500;save();render();toast('Se agregaron S/ 500 de saldo de ejemplo.')}
+ if(a==='tut'){S.tut=(S.tut+1)%3;render()}
+ if(a==='perm'){var uu=U();uu.perm=!uu.perm;save();render()}
+ if(a==='open'){var u2=U();u2.apertura=true;save();render()}
+ if(a==='photo')$('#boletain').click();
+ if(a==='demoscan')startScan();
+ if(a==='voice'){var kk=S.scan.kind;S.scan.voice=true;render();setTimeout(function(){S.scan.voice=false;addMov({t:kk==='venta'?'v':'g',d:'Nota de voz: '+(kk==='venta'?'3 kilos de arroz':'compra de mercadería'),m:15});render();toast('Registrado en menos de 2 minutos.')},1500)}
+ if(a==='cancelscan'){S.scan.st='idle';render()}
+ if(a==='save'){var sc=S.scan,m=Math.round(Number(String(sc.monto).replace(',','.'))*100)/100;if(!(m>0))return;
+  if(sc.kind==='venta'){addMov({t:'v',d:sc.comercio,m:m});toast('Venta guardada en tu flujo de caja.')}
+  else if(sc.kind==='gasto'){addMov({t:'pago',d:sc.comercio,m:m});toast('Gasto guardado.')}
+  else if(sc.flag==='p'){toast('Guardado como compra personal: no se cuenta en tu negocio.')}
+  else{addMov({t:'g',d:sc.comercio,m:m});toast('Compra guardada en tu negocio.')}
+  S.scan={kind:sc.kind,st:'idle',flag:null,monto:'',comercio:'',voice:false};render()}
+ if(a==='excel')exportXlsx();
+ if(a==='trgo'){var u3=U(),mt=Math.round(Number(String(S.tr.monto).replace(',','.'))*100)/100;
+  if(!(mt>0)){S.tr.err='Escribe un monto mayor a 0.';var e1=$('#trerr');e1.textContent=S.tr.err;e1.hidden=false;return}
+  if(mt>u3.saldo){S.tr.err='No te alcanza el saldo. Recarga saldo de ejemplo desde Inicio.';var e2=$('#trerr');e2.textContent=S.tr.err;e2.hidden=false;return}
+  u3.saldo=Math.round((u3.saldo-mt)*100)/100;addMov({t:'tr',d:S.tr.who.n,m:mt});S.tr.ok={m:mt,n:S.tr.who.n,d:new Date().toISOString()};go('trok')}
+ if(a==='lessonback'){S.lesson=null;S.pick=null;render()}
+ if(a==='apply'){var u4=U();u4.sent=true;save();render()}
+ if(a==='copy'){S.copied=true;render();try{navigator.clipboard.writeText(U().usuario.toUpperCase().slice(0,10)+'-CERTUS').catch(function(){})}catch(x){}}
+});
+document.addEventListener('input',function(e){
+ var t=e.target,D=t.dataset;
+ if(D.ci!==undefined){var i=+D.ci,v=t.value.replace(/\D/g,'');t.value=v.slice(-1);
+  if(v&&i<5){var nx=document.querySelector('[data-ci="'+(i+1)+'"]');if(nx)nx.focus()}
+  checkCode();return}
+ if(D.in){var k=D.in;S.reg[k]=t.value;if(S.reg.err&&k!=='lgp')setErr('');
+  if(k==='usuario')liveUser();if(k==='pass'||k==='pass2')livePass();return}
+ if(D.tr){S.tr[D.tr]=t.value;if(D.tr==='q'){var pos=t.selectionStart;render();var n=$('#trq');if(n){n.focus();try{n.setSelectionRange(pos,pos)}catch(x){}}}else{S.tr.err='';var er=$('#trerr');if(er)er.hidden=true}return}
+ if(D.sc==='monto'){S.scan.monto=t.value;var ok=(S.scan.kind!=='compra'||S.scan.flag!==null)&&Number(String(t.value).replace(',','.'))>0;var b=$('#savebtn');if(b)b.disabled=!ok;return}
+ if(t.id==='cin'&&!busy)setState('listen');
+});
+function checkCode(){
+ var boxes=[].slice.call(document.querySelectorAll('.cbox')),v=boxes.map(function(b){return b.value}).join('');
+ boxes.forEach(function(b){b.classList.remove('bad')});
+ if(v.length<6)return;
+ if(v===S.reg.code){S.reg.err='';clearInterval(timerI);S.reg.step=6;S.reg.sub='';render()}
+ else{setErr('El código no es correcto. Revisa el correo de ejemplo.');boxes.forEach(function(b){b.classList.add('bad')})}
+}
+document.addEventListener('keydown',function(e){
+ var t=e.target;
+ if(t.dataset&&t.dataset.ci!==undefined&&e.key==='Backspace'&&!t.value){var p=document.querySelector('[data-ci="'+(+t.dataset.ci-1)+'"]');if(p){p.focus();p.value=''}}
+ if(e.key==='Enter'){
+  if(S.screen==='login'&&(t.id==='usr'||t.id==='pwd')){e.preventDefault();doLogin()}
+  else if(S.screen==='reg'&&t.tagName==='INPUT'&&t.dataset.ci===undefined){var b=$('[data-act="rnext"]');if(b&&!b.disabled){e.preventDefault();b.click()}}
+ }
+ if(e.key==='Escape'&&chatOpen)setChat(false);
+});
+document.addEventListener('paste',function(e){
+ var t=e.target;if(!t.dataset||t.dataset.ci===undefined)return;
+ var txt=((e.clipboardData&&e.clipboardData.getData('text'))||'').replace(/\D/g,'').slice(0,6);if(!txt)return;e.preventDefault();
+ var boxes=document.querySelectorAll('.cbox');for(var i=0;i<6;i++)boxes[i].value=txt[i]||'';checkCode();
+});
+document.addEventListener('change',function(e){
+ var t=e.target;
+ if(t.id==='fotoin'&&t.files&&t.files[0]){try{if(S.reg.faceUrl)URL.revokeObjectURL(S.reg.faceUrl);S.reg.faceUrl=URL.createObjectURL(t.files[0])}catch(x){S.reg.faceUrl=''}S.reg.fs='check';t.value='';render()}
+ if(t.id==='boletain'&&t.files&&t.files[0]){t.value='';startScan()}
+ if(t.id==='doc'){S.reg.doc=t.value}
+});
+$('#fab').addEventListener('click',function(){setChat(true)});
+$('#fab').addEventListener('pointerenter',function(){wave();hint()});
+$('#cin').addEventListener('blur',function(){if(!busy)setState('idle')});
+$('#chatclose').addEventListener('click',function(){setChat(false)});
+$('#cform').addEventListener('submit',function(e){e.preventDefault();var i=$('#cin');ask(i.value);i.value=''});
+var dark=false;
+function applyTheme(){var r=document.documentElement;r.setAttribute('data-theme',dark?'dark':'light');$('#themebtn').textContent=dark?'Cambiar a modo claro':'Cambiar a modo oscuro'}
+(function(){try{dark=window.matchMedia('(prefers-color-scheme: dark)').matches}catch(x){}applyTheme()})();
+var rst=0;
+$('#resetbtn').addEventListener('click',function(){if(cloud())return;
+ var b=$('#resetbtn');
+ if(!rst){rst=setTimeout(function(){rst=0;b.textContent='Borrar cuentas de prueba'},4000);b.textContent='¿Seguro? Toca de nuevo';return}
+ clearTimeout(rst);rst=0;b.textContent='Borrar cuentas de prueba';DB={users:{},last:null};lsDel('certus_db_v1');S.user=null;S.reg=freshReg();S.screen='welcome';render();toast('Cuentas de prueba borradas.');
+});
+$('#themebtn').addEventListener('click',function(){dark=!dark;applyTheme()});
+render();drawChat();
+
+function hookCloud(){
+ CFB=window.CertusFB;if(!CFB)return;
+ var rb=$('#resetbtn');if(rb)rb.hidden=true;
+ var nt=document.querySelector('.note');if(nt)nt.textContent='Tu cuenta se guarda de forma segura en la nube de Certus Banco (Firebase). La verificación facial y el código del correo siguen siendo simulados en esta versión.';
+ CFB.onAuth(async function(u){
+  if(!u||S.user||S.screen==='reg')return;
+  try{var r=await CFB.loadProfile(u.uid);if(!r)return;var key=String(r.usuario||'').toLowerCase();if(!key)return;
+   S.uid=u.uid;DB.users[key]=normUser(r);S.user=key;DB.last=key;if(S.screen==='welcome'||S.screen==='login')go('home')}catch(e){}
+ });
+}
+if(window.CertusFB)hookCloud();else window.addEventListener('certus-fb',hookCloud);
+})();
+</script>
+
+<script type="module">
+/* Conexión con Firebase (proyecto certus-banco). Si no carga, la app sigue en modo local. */
+try{
+const V="10.14.1",B="https://www.gstatic.com/firebasejs/"+V+"/";
+const [{initializeApp},A,F]=await Promise.all([import(B+"firebase-app.js"),import(B+"firebase-auth.js"),import(B+"firebase-firestore.js")]);
+const firebaseConfig={
+  apiKey:"AIzaSyApaAybwKiBWK7lWEWUiCD51oiKkTDsE9Y",
+  authDomain:"certus-banco.firebaseapp.com",
+  projectId:"certus-banco",
+  storageBucket:"certus-banco.firebasestorage.app",
+  messagingSenderId:"835083885432",
+  appId:"1:835083885432:web:e425db241639d1a725c68d"
+};
+const app=initializeApp(firebaseConfig),auth=A.getAuth(app),db=F.getFirestore(app);
+const mail=k=>k+"@usuarios.certusbanco.app";
+async function sha(t){const h=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t));return Array.from(new Uint8Array(h)).map(x=>x.toString(16).padStart(2,"0")).join("")}
+function clean(u){const o=Object.assign({},u);delete o.salt;delete o.hash;return JSON.parse(JSON.stringify(o))}
+window.CertusFB={
+ async usernameExists(k){return false},
+ async dniExists(d){return false},
+ async register(key,pass,rec){
+  const cred=await A.createUserWithEmailAndPassword(auth,mail(key),pass),uid=cred.user.uid;
+  try{
+   const b=F.writeBatch(db);
+   b.set(F.doc(db,"users",uid),clean(rec));
+   b.set(F.doc(db,"dnis",await sha(rec.dni)),{uid});
+   await b.commit();
+  }catch(e){try{await cred.user.delete()}catch(x){}throw e}
+  return uid;
+ },
+ async login(key,pass){
+  const cred=await A.signInWithEmailAndPassword(auth,mail(key),pass);
+  const snap=await F.getDoc(F.doc(db,"users",cred.user.uid));
+  if(!snap.exists()){const e=new Error("sin perfil");e.code="no-profile";throw e}
+  return {uid:cred.user.uid,data:snap.data()};
+ },
+ async loadProfile(uid){const s=await F.getDoc(F.doc(db,"users",uid));return s.exists()?s.data():null},
+ async saveUser(uid,u){await F.setDoc(F.doc(db,"users",uid),clean(u),{merge:true})},
+ logout(){return A.signOut(auth)},
+ onAuth(fn){return A.onAuthStateChanged(auth,fn)}
+};
+window.dispatchEvent(new Event("certus-fb"));
+}catch(e){console.warn("Firebase no disponible, modo local",e)}
+</script>
+<script>if('serviceWorker' in navigator&&location.protocol.indexOf('http')===0){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})}</script>
+
+
